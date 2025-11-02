@@ -248,6 +248,13 @@ Non-normative example of the ID Token payload:
 }
 ```
 
+## Refresh Request
+
+If a Refresh Token was returned in the Token Response, the RP may make Refresh Requests to the OP as defined in [@!OpenID.Core] 12.
+If an ID Token is returned as a result of a token refresh request, an additional requirement applies:
+
+- its `cnf` claim MUST be the same as in the ID Token issued when the original authentication occurred.
+
 ## ID Token Proof of Possession
 
 The mechanism for how an RP authenticating component proves to an RP consuming component that it possesses the private keys associated with the `cnf` claim in the ID Token is out of scope of this document.
@@ -342,4 +349,4 @@ specification.
 
    -00
 
-   initial draft
+   initial draft  
