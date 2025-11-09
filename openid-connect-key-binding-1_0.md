@@ -147,7 +147,7 @@ Following is a non-normative example of an authentication request using the auth
 ```text
 GET /authorize?
 response_type=code
-&dpop_jkt=1f2e6338febe335e2cbaa7c7154c3cbdcfd8650f95c5fe7206bb6360e37f4b5a
+&dpop_jkt=dnfb1T9jil_gOhti60baHs_WD_a4D8JN9VDJXbmBmGw
 &scope=openid%20profile%20email%20bound_key
 &client_id=s6BhdRkqt3
 &state=af0ifjsldkj
@@ -195,19 +195,22 @@ To obtain the ID Token, the RP authenticating component:
 2. converts the hash to BASE64URL 
 3. generates a `DPoP` header, including the `c_hash` claim in the `DPoP` header JWT. This binds the authorization code to the token request. 
 
-Non-normative example:
+Non-normative example of a confidential client setting `Authorization: Basic` per [@!OpenID.Core] 3.1.3.1:
 
 ```text
 POST /token HTTP/1.1
 Host: server.example.com
 Content-Type: application/x-www-form-urlencoded
 Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
-DPoP: eyJhbGciOiJFUzI1NiJ9.eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkV\
- TMjU2IiwiandrIjp7ImNydiI6IlAtMjU2Iiwia3R5IjoiRUMiLCJ4IjoibWptR\
- m1MZm9wVmkwZXRfYTZmZFhUTnJqYVUwR1dlZFN0Y3NfRzU4OEkyMCIsInkiOiJ\
- sMFZwRXlSYzdTdUpfdHFhd2NaQ2VLLXVUOEVPVnF4N3NqTHJGeUJTUllZIn0sI\
- m5vbmNlIjoiU3BseGxPQmVaUVFZYllTNld4U2JJQSJ9.cp8uN3kHAMS9fhGH7T\
- vTSKwH5oNJzAeMhIrgD_HQHGhgt_N1xQHdHiMkn7AMj3UDkwoNOW4Qqak
+DPoP: eyJhbGciOiJFUzI1NiIsImp3ayI6eyJjcnYiOiJQLTI1NiIsImt0eSI6\
+  IkVDIiwieCI6InVrcHYzZlU2dHFRS2FVd2NkQkFRb0szSUh2SklXX185eU5kMW\
+  9SN3F2WmMiLCJ5IjoibkJCeFhyeDBOeml3Z19ldmZVTVVVZ25HS0tVZjJBVHBX\
+  RzlFb2puVW9VNCJ9LCJ0eXAiOiJkcG9wK2p3dCJ9.eyJjX2hhc2giOiJvMXVCc\
+  DllU2UzRHNtU2NOMGpZcmlGZ0tLRmRLLUJMeXdDOVdScFY1R0c4IiwiaHRtIjo\
+  iUE9TVCIsImh0dSI6Imh0dHBzOi8vb3AuZXhhbXBsZS5jb20vdG9rZW4iLCJpY\
+  XQiOjE3NjE5Mzc0NDksImp0aSI6IklRUzV0WVAtYnBCUHRKc29yVDR6N2cifQ.\
+  DTmxAVAFbq5r7cRAyZ_2bXMoVR5pzGdlTA8Gh12_5dDMnzXxnw-3nVbm4UYZzR\
+  kdMdW6U2P_OM_VIZD8vhrMcA
 grant_type=authorization_code&code=SplxlOBeZQQYbYS6WxSbIA
 &redirect_uri=https%3A%2F%2Fclient.example.org%2Fcb
 ```
@@ -217,6 +220,7 @@ If a DPoP header is included in the token request to the OP, and the `dpop_jkt` 
 > This prevents an existing deployment using DPoP for access token from having them included in ID Tokens accidentally.
 
 The OP MUST:
+
 - perform all verification steps as described in [@!RFC9449] section 5.
 - calculate the `c_hash` from the authorization `code` just as the RP component did.
 - confirm the `c_hash` in the DPoP JWT matches its calculated `c_hash`
@@ -241,8 +245,8 @@ Non-normative example of the ID Token payload:
                 "alg":"ES256",
                 "crv": "P-256",
                 "kty": "EC",
-                "x": "mjmFmLfopVi0et_a6fdXTNrjaU0GWedStcs_G588I20",
-                "y": "l0VpEyRc7SuJ_tqawcZCeK-uT8EOVqx7sjLrFyBSRYY"
+                "x": "ukpv3fU6tqQKaUwcdBAQoK3IHvJIW__9yNd1oR7qvZc",
+                "y": "nBBxXrx0Nziwg_evfUMUUgnGKKUf2ATpWG9EojnUoU4"
             }
         }
 }
@@ -252,7 +256,7 @@ Non-normative example of the ID Token payload:
 
 The mechanism for how an RP authenticating component proves to an RP consuming component that it possesses the private keys associated with the `cnf` claim in the ID Token is out of scope of this document.
 
-> If the WG wants to, we can also profile how to use KB to bind a proof of possession to an ID Token for presentation when a proof of possesion is not present.
+> If the WG wants to, we can also profile how to use KB to bind a proof of possession to an ID Token for presentation when a proof of possession is not present.
 
 # Privacy Considerations
 
@@ -260,7 +264,7 @@ An RP authenticating component SHOULD only share an ID Token with a consuming co
 
 # Security Considerations
 
-## Require Proof of Possesion
+## Require Proof of Possession
 
 An RP consuming component MUST NOT trust an ID Token with a `cnf` claim without a corresponding proof of possession from the RP authenticating component.
 
@@ -268,10 +272,9 @@ An RP consuming component MUST NOT trust an ID Token with a `cnf` claim without 
 
 In addition to verifying the signature created by the RP authenticating component to prove possession of the private key associated with the `cnf` claim in the ID Token, an RP consuming component MUST independently verify the signature and validity of the ID Token and that the `aud` claim in the payload is the correct value, and that the `typ` claim in the protected header is `id_token+cnf`.
 
-
 ## Use as Access Token
 
-The ID Token MUST NOT be used as an access token to access resources. The RP MAY exchange the ID Token with a proof of possesion for an access token that can then be used to access resources.
+The ID Token MUST NOT be used as an access token to access resources. The RP MAY exchange the ID Token with a proof of possession for an access token that can then be used to access resources.
 
 ## Unique Key Pair
 
