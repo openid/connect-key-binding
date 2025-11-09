@@ -212,6 +212,8 @@ grant_type=authorization_code&code=SplxlOBeZQQYbYS6WxSbIA
 &redirect_uri=https%3A%2F%2Fclient.example.org%2Fcb
 ```
 
+`Authorization: Basic` HTTP header is only included if a confidential client is used.
+
 If a DPoP header is included in the token request to the OP, and the `dpop_jkt` parameter was not included in the authentication request, the OP MUST NOT include the `cnf` claim in the ID Token.
 
 > This prevents an existing deployment using DPoP for access token from having them included in ID Tokens accidentally.
