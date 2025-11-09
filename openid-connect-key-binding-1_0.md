@@ -195,7 +195,7 @@ To obtain the ID Token, the RP authenticating component:
 2. converts the hash to BASE64URL 
 3. generates a `DPoP` header, including the `c_hash` claim in the `DPoP` header JWT. This binds the authorization code to the token request. 
 
-Non-normative example:
+Non-normative example of a confidential client setting `Authorization: Basic` per [@!OpenID.Core] 3.1.3.1:
 
 ```text
 POST /token HTTP/1.1
