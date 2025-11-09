@@ -349,4 +349,4 @@ specification.
 
    -00
 
-   initial draft  
+   initial draft
