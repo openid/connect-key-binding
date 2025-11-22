@@ -1542,10 +1542,18 @@ grant_type=authorization_code&amp;code=SplxlOBeZQQYbYS6WxSbIA
             <p id="section-1.8-7.1.1">This prevents an existing deployment using DPoP for access token from having them included in ID Tokens accidentally.<a href="#section-1.8-7.1.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-1.8-8">The OP MUST:
-- perform all verification steps as described in <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span> section 5.
-- calculate the <code>c_hash</code> from the authorization <code>code</code> just as the RP component did.
-- confirm the <code>c_hash</code> in the DPoP JWT matches its calculated <code>c_hash</code><a href="#section-1.8-8" class="pilcrow">¶</a></p>
+<p id="section-1.8-8">The OP MUST:<a href="#section-1.8-8" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-1.8-9.1">
+            <p id="section-1.8-9.1.1">perform all verification steps as described in <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span> section 5.<a href="#section-1.8-9.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.8-9.2">
+            <p id="section-1.8-9.2.1">calculate the <code>c_hash</code> from the authorization <code>code</code> just as the RP component did.<a href="#section-1.8-9.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.8-9.3">
+            <p id="section-1.8-9.3.1">confirm the <code>c_hash</code> in the DPoP JWT matches its calculated <code>c_hash</code><a href="#section-1.8-9.3.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
 </section>
 </div>
 <div id="token-response">
@@ -1576,6 +1584,8 @@ grant_type=authorization_code&amp;code=SplxlOBeZQQYbYS6WxSbIA
 }
 </pre><a href="#section-1.9-3" class="pilcrow">¶</a>
 </div>
+<p id="section-1.9-4">The OP MAY return a Refresh Token.
+If a Refresh Token is returned, it MUST be bound the public key of the DPoP proof used in the Token Request i.e. the same public key bound to the ID Token.<a href="#section-1.9-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="refresh-request">
@@ -1583,11 +1593,38 @@ grant_type=authorization_code&amp;code=SplxlOBeZQQYbYS6WxSbIA
         <h3 id="name-refresh-request">
 <a href="#section-1.10" class="section-number selfRef">1.10. </a><a href="#name-refresh-request" class="section-name selfRef">Refresh Request</a>
         </h3>
-<p id="section-1.10-1">If a Refresh Token was returned in the Token Response, the RP may make Refresh Requests to the OP as defined in <span>[<a href="#OpenID.Core" class="cite xref">OpenID.Core</a>]</span> 12.
-If an ID Token is returned as a result of a token refresh request, an additional requirement applies:<a href="#section-1.10-1" class="pilcrow">¶</a></p>
+<p id="section-1.10-1">If a Refresh Token was returned in the Token Response, the RP may use the Refresh Token to make Refresh Requests to the OP and receive a refreshed the ID Token (<span>[<a href="#OpenID.Core" class="cite xref">OpenID.Core</a>]</span> 12).
+This Refresh Token MUST be bound to the same public key as the ID Token and the OP MUST validate a DPoP proof for this public key on each refresh request.<a href="#section-1.10-1" class="pilcrow">¶</a></p>
+<p id="section-1.10-2">To refresh the ID Token, the RP authenticating component:<a href="#section-1.10-2" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-1.10-3">
+<li id="section-1.10-3.1">
+            <p id="section-1.10-3.1.1">generates a <code>DPoP</code> header<a href="#section-1.10-3.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li id="section-1.10-3.2">
+            <p id="section-1.10-3.2.1">makes a POST request to the OP's Token Endpoint with the <code>DPoP</code> header and the Refresh Token as a parameter.<a href="#section-1.10-3.2.1" class="pilcrow">¶</a></p>
+</li>
+        </ol>
+<p id="section-1.10-4">Non-normative example:<a href="#section-1.10-4" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-1.10-5">
+<pre>POST /token HTTP/1.1
+Host: server.example.com
+Content-Type: application/x-www-form-urlencoded
+DPoP: eyJhbGciOiJFUzI1NiIsImp3ayI6eyJjcnYiOiJQLTI1NiIsImt0eSI6\
+ IkVDIiwieCI6InVrcHYzZlU2dHFRS2FVd2NkQkFRb0szSUh2SklXX185eU5kMW\
+ 9SN3F2WmMiLCJ5IjoibkJCeFhyeDBOeml3Z19ldmZVTVVVZ25HS0tVZjJBVHBX\
+ RzlFb2puVW9VNCJ9LCJ0eXAiOiJkcG9wK2p3dCJ9.eyJjX2hhc2giOiIiLCJod\
+ G0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9vcC5leGFtcGxlLmNvbS90b2tlbiI\
+ sImlhdCI6MTc2MTkzNzgyMywianRpIjoiYkc5elpXWmxibU5sWTJodmIzTmxjb\
+ SJ9.Hn65nWLd2WMkm22-KVMyi6yuBLEM0cPdcP26TqaLoV83_eMCuyKNk2qzkE\
+ UytsGO01987vORiS_V5u5lInEecA
+grant_type=refresh_token&amp;refresh_token=8xLOxBtZp8
+</pre><a href="#section-1.10-5" class="pilcrow">¶</a>
+</div>
+<p id="section-1.10-6">The OP MUST validate the Refresh Token and MUST validate the <code>DPoP</code> header against the public key bound to that Refresh Token.<a href="#section-1.10-6" class="pilcrow">¶</a></p>
+<p id="section-1.10-7">If an ID Token is returned as a result of a Refresh Request, an additional requirement applies:<a href="#section-1.10-7" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-1.10-2.1">
-            <p id="section-1.10-2.1.1">its <code>cnf</code> claim MUST be the same as in the ID Token issued when the original authentication occurred.<a href="#section-1.10-2.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-1.10-8.1">
+            <p id="section-1.10-8.1.1">its <code>cnf</code> claim MUST be the same as in the ID Token issued when the original authentication occurred.<a href="#section-1.10-8.1.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
