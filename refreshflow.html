@@ -1233,7 +1233,7 @@ li > p:last-of-type:only-child {
 <dd class="workgroup">OpenID Connect</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2025-11-09" class="published">9 November 2025</time>
+<time datetime="2025-11-22" class="published">22 November 2025</time>
     </dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
@@ -1535,16 +1535,17 @@ grant_type=authorization_code&amp;code=SplxlOBeZQQYbYS6WxSbIA
 &amp;redirect_uri=https%3A%2F%2Fclient.example.org%2Fcb
 </pre><a href="#section-1.8-4" class="pilcrow">¶</a>
 </div>
-<p id="section-1.8-5">If a DPoP header is included in the token request to the OP, and the <code>dpop_jkt</code> parameter was not included in the authentication request, the OP MUST NOT include the <code>cnf</code> claim in the ID Token.<a href="#section-1.8-5" class="pilcrow">¶</a></p>
+<p id="section-1.8-5"><code>Authorization: Basic</code> HTTP header is only included if a confidential client is used.<a href="#section-1.8-5" class="pilcrow">¶</a></p>
+<p id="section-1.8-6">If a DPoP header is included in the token request to the OP, and the <code>dpop_jkt</code> parameter was not included in the authentication request, the OP MUST NOT include the <code>cnf</code> claim in the ID Token.<a href="#section-1.8-6" class="pilcrow">¶</a></p>
 <ul class="normal ulEmpty">
-<li class="normal ulEmpty" id="section-1.8-6.1">
-            <p id="section-1.8-6.1.1">This prevents an existing deployment using DPoP for access token from having them included in ID Tokens accidentally.<a href="#section-1.8-6.1.1" class="pilcrow">¶</a></p>
+<li class="normal ulEmpty" id="section-1.8-7.1">
+            <p id="section-1.8-7.1.1">This prevents an existing deployment using DPoP for access token from having them included in ID Tokens accidentally.<a href="#section-1.8-7.1.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-1.8-7">The OP MUST:
+<p id="section-1.8-8">The OP MUST:
 - perform all verification steps as described in <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span> section 5.
 - calculate the <code>c_hash</code> from the authorization <code>code</code> just as the RP component did.
-- confirm the <code>c_hash</code> in the DPoP JWT matches its calculated <code>c_hash</code><a href="#section-1.8-7" class="pilcrow">¶</a></p>
+- confirm the <code>c_hash</code> in the DPoP JWT matches its calculated <code>c_hash</code><a href="#section-1.8-8" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="token-response">
