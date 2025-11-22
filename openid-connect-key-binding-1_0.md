@@ -100,7 +100,7 @@ This specification uses the following terms:
 
 - **OP**: The OpenID Provider as defined in [@!OpenID.Core].
 
-- **RP**: The Relying Party as defined in [@!OpenID.Core]. 
+- **RP**: The Relying Party as defined in [@!OpenID.Core].
 
 The parameters **dpop_jkt** and **DPoP** as defined in [@!RFC9449]
 
@@ -158,7 +158,6 @@ Host: server.example.com
 
 If the OP does not support the `bound_key` scope, it SHOULD ignore it per [@!OpenID.Core] 3.1.2.1.
 
-
 ## Authentication Request - Device Authorization Flow
 
 If the RP authenticating component is running on a device that does not support a web browser, it makes an authorization request per [@!RFC8628] 3.1. In the request, the `scope` parameter MUST contain both `openid` and `bound_key`. The request MUST include the `dpop_jkt` parameter having the value of the JWK Thumbprint [@!RFC7638] of the proof-of-possession public key using the SHA-256 hash function, as defined in [@!RFC9449] section 10.
@@ -170,12 +169,10 @@ TBD
 
 ```
 
-
 If the OP does not support the `bound_key` scope, it SHOULD ignore it per [@!OpenID.Core] 3.1.2.1.
 
 
 ## Authentication Response
-
 
 If the key provided was not previously bound to the client, the OP SHOULD inform a user and obtain consent that a key binding will be done. 
 
@@ -192,8 +189,8 @@ TBD
 To obtain the ID Token, the RP authenticating component:
 
 1. generates a `c_hash` by computing a SHA256 hash of the authorization `code`
-2. converts the hash to BASE64URL 
-3. generates a `DPoP` header, including the `c_hash` claim in the `DPoP` header JWT. This binds the authorization code to the token request. 
+2. converts the hash to BASE64URL
+3. generates a `DPoP` header, including the `c_hash` claim in the `DPoP` header JWT. This binds the authorization code to the token request.
 
 Non-normative example:
 
@@ -219,6 +216,7 @@ If a DPoP header is included in the token request to the OP, and the `dpop_jkt` 
 > This prevents an existing deployment using DPoP for access token from having them included in ID Tokens accidentally.
 
 The OP MUST:
+
 - perform all verification steps as described in [@!RFC9449] section 5.
 - calculate the `c_hash` from the authorization `code` just as the RP component did.
 - confirm the `c_hash` in the DPoP JWT matches its calculated `c_hash`
@@ -250,10 +248,39 @@ Non-normative example of the ID Token payload:
 }
 ```
 
+The OP MAY return a Refresh Token.
+If a Refresh Token is returned, it MUST be bound the public key of the DPoP proof used in the Token Request i.e. the same public key bound to the ID Token.
+
 ## Refresh Request
 
-If a Refresh Token was returned in the Token Response, the RP may make Refresh Requests to the OP as defined in [@!OpenID.Core] 12.
-If an ID Token is returned as a result of a token refresh request, an additional requirement applies:
+If a Refresh Token was returned in the Token Response, the RP may use the Refresh Token to make Refresh Requests to the OP and receive a refreshed the ID Token ([@!OpenID.Core] 12).
+This Refresh Token MUST be bound to the same public key as the ID Token and the OP MUST validate a DPoP proof for this public key on each refresh request.
+
+To refresh the ID Token, the RP authenticating component:
+
+1. generates a `DPoP` header
+2. makes a POST request to the OP's Token Endpoint with the `DPoP` header and the Refresh Token as a parameter.
+
+Non-normative example:
+
+```text
+POST /token HTTP/1.1
+Host: server.example.com
+Content-Type: application/x-www-form-urlencoded
+DPoP: eyJhbGciOiJFUzI1NiIsImp3ayI6eyJjcnYiOiJQLTI1NiIsImt0eSI6\
+ IkVDIiwieCI6InVrcHYzZlU2dHFRS2FVd2NkQkFRb0szSUh2SklXX185eU5kMW\
+ 9SN3F2WmMiLCJ5IjoibkJCeFhyeDBOeml3Z19ldmZVTVVVZ25HS0tVZjJBVHBX\
+ RzlFb2puVW9VNCJ9LCJ0eXAiOiJkcG9wK2p3dCJ9.eyJjX2hhc2giOiIiLCJod\
+ G0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9vcC5leGFtcGxlLmNvbS90b2tlbiI\
+ sImlhdCI6MTc2MTkzNzgyMywianRpIjoiYkc5elpXWmxibU5sWTJodmIzTmxjb\
+ SJ9.Hn65nWLd2WMkm22-KVMyi6yuBLEM0cPdcP26TqaLoV83_eMCuyKNk2qzkE\
+ UytsGO01987vORiS_V5u5lInEecA
+grant_type=refresh_token&refresh_token=8xLOxBtZp8
+```
+
+The OP MUST validate the Refresh Token and MUST validate the `DPoP` header against the public key bound to that Refresh Token.
+
+If an ID Token is returned as a result of a Refresh Request, an additional requirement applies:
 
 - its `cnf` claim MUST be the same as in the ID Token issued when the original authentication occurred.
 
