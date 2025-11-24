@@ -253,7 +253,7 @@ If a Refresh Token is returned, it MUST be bound the public key of the DPoP proo
 
 ## Refresh Request
 
-If a Refresh Token was returned in the Token Response, the RP may use the Refresh Token to make Refresh Requests to the OP and receive a refreshed the ID Token ([@!OpenID.Core] 12).
+If a Refresh Token was returned in the Token Response, the RP may use the Refresh Token to make Refresh Requests to the OP's Token Endpoint and receive a refreshed ID Token ([@!OpenID.Core] 12).
 This Refresh Token MUST be bound to the same public key as the ID Token and the OP MUST validate a DPoP proof for this public key on each refresh request.
 
 To refresh the ID Token, the RP authenticating component:
@@ -270,19 +270,22 @@ Content-Type: application/x-www-form-urlencoded
 DPoP: eyJhbGciOiJFUzI1NiIsImp3ayI6eyJjcnYiOiJQLTI1NiIsImt0eSI6\
  IkVDIiwieCI6InVrcHYzZlU2dHFRS2FVd2NkQkFRb0szSUh2SklXX185eU5kMW\
  9SN3F2WmMiLCJ5IjoibkJCeFhyeDBOeml3Z19ldmZVTVVVZ25HS0tVZjJBVHBX\
- RzlFb2puVW9VNCJ9LCJ0eXAiOiJkcG9wK2p3dCJ9.eyJjX2hhc2giOiIiLCJod\
- G0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9vcC5leGFtcGxlLmNvbS90b2tlbiI\
- sImlhdCI6MTc2MTkzNzgyMywianRpIjoiYkc5elpXWmxibU5sWTJodmIzTmxjb\
- SJ9.Hn65nWLd2WMkm22-KVMyi6yuBLEM0cPdcP26TqaLoV83_eMCuyKNk2qzkE\
- UytsGO01987vORiS_V5u5lInEecA
+ RzlFb2puVW9VNCJ9LCJ0eXAiOiJkcG9wK2p3dCJ9.eyJodG0iOiJQT1NUIiwia\
+ HR1IjoiaHR0cHM6Ly9vcC5leGFtcGxlLmNvbS90b2tlbiIsImlhdCI6MTc2MTk\
+ zNzgyMywianRpIjoiYkc5elpXWmxibU5sWTJodmIzTmxjbSJ9.aLz7i4zUSLJv\
+ pZrOQUgKXGswEUMJLMi6F81wcWWhdbuiyoJla2ogyZd7-PwdOo5smQxEskTwhB\
+ HSHCwvzEPKlw
 grant_type=refresh_token&refresh_token=8xLOxBtZp8
 ```
 
-The OP MUST validate the Refresh Token and MUST validate the `DPoP` header against the public key bound to that Refresh Token.
+The OP MUST validate the Refresh Token and MUST validate the `DPoP` header presented.
+THE OP MUST reject the `DPoP` header if it is not signed with the public key that was bound to the presented Refresh Token in the initial Token Request.
 
 If an ID Token is returned as a result of a Refresh Request, an additional requirement applies:
 
 - its `cnf` claim MUST be the same as in the ID Token issued when the original authentication occurred.
+
+If a new Refresh Token is returned as a result of a Refresh Request, the newly issued Refresh Token MUST continue to be bound to the same public key as the original Refresh Token.
 
 ## ID Token Proof of Possession
 
