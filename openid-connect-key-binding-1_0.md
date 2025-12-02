@@ -135,7 +135,7 @@ This specification profiles how to bind a public key to an ID Token by:
 The OP's OpenID Connect Metadata Document [@!OpenID.Discovery] SHOULD include:
 
 - the `bound_key` scope in the `supported_scopes`
-- the `dpop_signing_alg_values_supported` property containing a list of supported algorithms as defined in [@?IANA.JOSE.ALGS] 
+- the `dpop_signing_alg_values_supported` property containing a list of supported algorithms as defined in [@?IANA.JOSE.ALGS]
 
 
 ## Authentication Request - Authorization Code Flow
@@ -242,7 +242,6 @@ Non-normative example of the ID Token payload:
     "cnf":
         {
             "jwk": {
-                "alg":"ES256",
                 "crv": "P-256",
                 "kty": "EC",
                 "x": "ukpv3fU6tqQKaUwcdBAQoK3IHvJIW__9yNd1oR7qvZc",
