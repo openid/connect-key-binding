@@ -58,7 +58,6 @@ organization="Cloudflare"
 
 .# Abstract
 
-
 OpenID Key Binding specifies how to bind a public key to an OpenID Connect ID Token using mechanisms defined in [@!RFC9449], OAuth 2.0 Demonstrating Proof of Possession (DPoP).
 
 {mainmatter}
@@ -77,7 +76,7 @@ The RP may also prove possession of the bound key when presenting an ID Token ba
 
 Use cases include: a mobile app that has received an ID Token exchanging the ID Token with a proof of possession with a first party authorization service for an access token; an instance of a peer to peer application such as video conferencing where one instance of the application sends the ID Token with a proof of possession to a second instance to prove which user is operating the first instance.
 
-This specification profiles OpenID Connect 1.0 [@!OpenID.Core], RFC8628 - OAuth 2.0 Device Authorization Grant [@!RFC8626], and RFC9449 - OAuth 2.0 Demonstrating Proof of Possession (DPoP) [@!RFC9449] to enable cryptographically bound ID Tokens that resist theft and replay attacks while maintaining compatibility with existing OpenID Connect infrastructure.
+This specification profiles OpenID Connect 1.0 [@!OpenID.Core], RFC8628 - OAuth 2.0 Device Authorization Grant [@!RFC8628], and RFC9449 - OAuth 2.0 Demonstrating Proof of Possession (DPoP) [@!RFC9449] to enable cryptographically bound ID Tokens that resist theft and replay attacks while maintaining compatibility with existing OpenID Connect infrastructure.
 
 
 ## Requirements Notation and Conventions
@@ -192,7 +191,7 @@ HTTP/1.1 302 Found
 
 ## Authentication Response - Device Authorization Flow
 
-As per [@!RFC8626] the, OP in response to the Authentication Request, generates and returns to the RP authenticating component the required parameters `device_code`, `user_code`, `verification_uri` and `expires_in` and may return the optional parameters `verification_uri_complete` and `interval`.
+As per [@!RFC8628] the, OP in response to the Authentication Request, generates and returns to the RP authenticating component the required parameters `device_code`, `user_code`, `verification_uri` and `expires_in` and may return the optional parameters `verification_uri_complete` and `interval`.
 
 Following is a non-normative example of an authentication response using the device authorization flow:
 
@@ -246,10 +245,10 @@ The OP MUST:
 
 ## Token Request - Device Authorization Flow
 
-As per [@!RFC8626] the RP authenticating component makes token requests to OP at regular intervals.
+As per [@!RFC8628] the RP authenticating component makes token requests to OP at regular intervals.
 Prior to the OP authenticating and obtaining consent from the user, the OP returns an error.
 Once the OP has authenticated and obtained consent from the user, the OP responds by returning the ID Token.
-Unlike [@!RFC8626] these POST contain a DPoP header.
+Unlike [@!RFC8628] these POST contain a DPoP header.
 
 To obtain the ID Token, the RP authenticating component:
 
