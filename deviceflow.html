@@ -1364,7 +1364,7 @@ li > p:last-of-type:only-child {
 <p id="section-1-4">By binding a cryptographic key to the ID Token, the RP authenticating component can prove to RP consuming components not only that a user has been authenticated, but that the RP authenticating component itself was the original recipient of that authentication. This transforms the ID Token from a vulnerable bearer token into a proof-of-possession token that provides stronger security guarantees.<a href="#section-1-4" class="pilcrow">¶</a></p>
 <p id="section-1-5">The RP may also prove possession of the bound key when presenting an ID Token back to the OP.<a href="#section-1-5" class="pilcrow">¶</a></p>
 <p id="section-1-6">Use cases include: a mobile app that has received an ID Token exchanging the ID Token with a proof of possession with a first party authorization service for an access token; an instance of a peer to peer application such as video conferencing where one instance of the application sends the ID Token with a proof of possession to a second instance to prove which user is operating the first instance.<a href="#section-1-6" class="pilcrow">¶</a></p>
-<p id="section-1-7">This specification profiles OpenID Connect 1.0 <span>[<a href="#OpenID.Core" class="cite xref">OpenID.Core</a>]</span>, RFC8628 - OAuth 2.0 Device Authorization Grant <span>[<a href="#RFC8626" class="cite xref">RFC8626</a>]</span>, and RFC9449 - OAuth 2.0 Demonstrating Proof of Possession (DPoP) <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span> to enable cryptographically bound ID Tokens that resist theft and replay attacks while maintaining compatibility with existing OpenID Connect infrastructure.<a href="#section-1-7" class="pilcrow">¶</a></p>
+<p id="section-1-7">This specification profiles OpenID Connect 1.0 <span>[<a href="#OpenID.Core" class="cite xref">OpenID.Core</a>]</span>, RFC8628 - OAuth 2.0 Device Authorization Grant <span>[<a href="#RFC8628" class="cite xref">RFC8628</a>]</span>, and RFC9449 - OAuth 2.0 Demonstrating Proof of Possession (DPoP) <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span> to enable cryptographically bound ID Tokens that resist theft and replay attacks while maintaining compatibility with existing OpenID Connect infrastructure.<a href="#section-1-7" class="pilcrow">¶</a></p>
 <div id="requirements-notation-and-conventions">
 <section id="section-1.1">
         <h3 id="name-requirements-notation-and-c">
@@ -1517,7 +1517,7 @@ Host: server.example.com
         <h3 id="name-authentication-response-dev">
 <a href="#section-1.8" class="section-number selfRef">1.8. </a><a href="#name-authentication-response-dev" class="section-name selfRef">Authentication Response - Device Authorization Flow</a>
         </h3>
-<p id="section-1.8-1">As per <span>[<a href="#RFC8626" class="cite xref">RFC8626</a>]</span> the, OP in response to the Authentication Request, generates and returns to the RP authenticating component the required parameters <code>device_code</code>, <code>user_code</code>, <code>verification_uri</code> and <code>expires_in</code> and may return the optional parameters <code>verification_uri_complete</code> and <code>interval</code>.<a href="#section-1.8-1" class="pilcrow">¶</a></p>
+<p id="section-1.8-1">As per <span>[<a href="#RFC8628" class="cite xref">RFC8628</a>]</span> the, OP in response to the Authentication Request, generates and returns to the RP authenticating component the required parameters <code>device_code</code>, <code>user_code</code>, <code>verification_uri</code> and <code>expires_in</code> and may return the optional parameters <code>verification_uri_complete</code> and <code>interval</code>.<a href="#section-1.8-1" class="pilcrow">¶</a></p>
 <p id="section-1.8-2">Following is a non-normative example of an authentication response using the device authorization flow:<a href="#section-1.8-2" class="pilcrow">¶</a></p>
 <div class="alignLeft art-json art-text artwork" id="section-1.8-3">
 <pre>{
@@ -1592,10 +1592,10 @@ grant_type=authorization_code&amp;code=SplxlOBeZQQYbYS6WxSbIA
         <h3 id="name-token-request-device-author">
 <a href="#section-1.10" class="section-number selfRef">1.10. </a><a href="#name-token-request-device-author" class="section-name selfRef">Token Request - Device Authorization Flow</a>
         </h3>
-<p id="section-1.10-1">As per <span>[<a href="#RFC8626" class="cite xref">RFC8626</a>]</span> the RP authenticating component makes token requests to OP at regular intervals.
+<p id="section-1.10-1">As per <span>[<a href="#RFC8628" class="cite xref">RFC8628</a>]</span> the RP authenticating component makes token requests to OP at regular intervals.
 Prior to the OP authenticating and obtaining consent from the user, the OP returns an error.
 Once the OP has authenticated and obtained consent from the user, the OP responds by returning the ID Token.
-Unlike <span>[<a href="#RFC8626" class="cite xref">RFC8626</a>]</span> these POST contain a DPoP header.<a href="#section-1.10-1" class="pilcrow">¶</a></p>
+Unlike <span>[<a href="#RFC8628" class="cite xref">RFC8628</a>]</span> these POST contain a DPoP header.<a href="#section-1.10-1" class="pilcrow">¶</a></p>
 <p id="section-1.10-2">To obtain the ID Token, the RP authenticating component:<a href="#section-1.10-2" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="normal type-1" id="section-1.10-3">
 <li id="section-1.10-3.1">
@@ -1786,10 +1786,6 @@ grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code
 <dt id="RFC7800">[RFC7800]</dt>
         <dd>
 <span class="refAuthor">Jones, M.</span>, <span class="refAuthor">Bradley, J.</span>, and <span class="refAuthor">H. Tschofenig</span>, <span class="refTitle">"Proof-of-Possession Key Semantics for JSON Web Tokens (JWTs)"</span>, <span class="seriesInfo">RFC 7800</span>, <span class="seriesInfo">DOI 10.17487/RFC7800</span>, <time datetime="2016-04" class="refDate">April 2016</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc7800">https://www.rfc-editor.org/info/rfc7800</a>&gt;</span>. </dd>
-<dd class="break"></dd>
-<dt id="RFC8626">[RFC8626]</dt>
-        <dd>
-<span class="refTitle">"Not Issued"</span>, <span class="seriesInfo">RFC 8626</span>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc8626">https://www.rfc-editor.org/info/rfc8626</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC8628">[RFC8628]</dt>
         <dd>
