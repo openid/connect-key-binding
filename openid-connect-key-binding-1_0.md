@@ -261,14 +261,14 @@ Host: server.example.com
 Content-Type: application/x-www-form-urlencoded
 Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
 DPoP: eyJhbGciOiJFUzI1NiIsImp3ayI6eyJjcnYiOiJQLTI1NiIsImt0eSI6\
-  IkVDIiwieCI6InVrcHYzZlU2dHFRS2FVd2NkQkFRb0szSUh2SklXX185eU5kMW\
-  9SN3F2WmMiLCJ5IjoibkJCeFhyeDBOeml3Z19ldmZVTVVVZ25HS0tVZjJBVHBX\
-  RzlFb2puVW9VNCJ9LCJ0eXAiOiJkcG9wK2p3dCJ9.eyJjX2hhc2giOiJvMXVCc\
-  DllU2UzRHNtU2NOMGpZcmlGZ0tLRmRLLUJMeXdDOVdScFY1R0c4IiwiaHRtIjo\
-  iUE9TVCIsImh0dSI6Imh0dHBzOi8vb3AuZXhhbXBsZS5jb20vdG9rZW4iLCJpY\
-  XQiOjE3NjE5Mzc0NDksImp0aSI6IklRUzV0WVAtYnBCUHRKc29yVDR6N2cifQ.\
-  DTmxAVAFbq5r7cRAyZ_2bXMoVR5pzGdlTA8Gh12_5dDMnzXxnw-3nVbm4UYZzR\
-  kdMdW6U2P_OM_VIZD8vhrMcA
+ IkVDIiwieCI6InVrcHYzZlU2dHFRS2FVd2NkQkFRb0szSUh2SklXX185eU5kMW\
+ 9SN3F2WmMiLCJ5IjoibkJCeFhyeDBOeml3Z19ldmZVTVVVZ25HS0tVZjJBVHBX\
+ RzlFb2puVW9VNCJ9LCJ0eXAiOiJkcG9wK2p3dCJ9.eyJjX2hhc2giOiJvMXVCc\
+ DllU2UzRHNtU2NOMGpZcmlGZ0tLRmRLLUJMeXdDOVdScFY1R0c4IiwiaHRtIjo\
+ iUE9TVCIsImh0dSI6Imh0dHBzOi8vc2VydmVyLmV4YW1wbGUuY29tL3Rva2VuI\
+ iwiaWF0IjoxNzYxOTM3NDQ5LCJqdGkiOiJJUVM1dFlQLWJwQlB0SnNvclQ0ejd\
+ nIn0.HEIQCKMXQcavGXWVV4D3NGMGI6Ca_vyXhkPYGX_Xp7jSoS8iVr_USnY-Q\
+ pEgS5pmIOyqQhbto4FzKJmhVRcjNQ
 grant_type=authorization_code&code=SplxlOBeZQQYbYS6WxSbIA
 &redirect_uri=https%3A%2F%2Fclient.example.org%2Fcb
 ```
@@ -344,7 +344,6 @@ Non-normative example of the ID Token payload:
     "cnf":
         {
             "jwk": {
-                "alg":"ES256",
                 "crv": "P-256",
                 "kty": "EC",
                 "x": "ukpv3fU6tqQKaUwcdBAQoK3IHvJIW__9yNd1oR7qvZc",
