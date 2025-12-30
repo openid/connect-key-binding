@@ -1594,9 +1594,9 @@ grant_type=authorization_code&amp;code=SplxlOBeZQQYbYS6WxSbIA
         </h3>
 <p id="section-1.10-1">As per <span>[<a href="#RFC8628" class="cite xref">RFC8628</a>]</span> the RP authenticating component makes token requests to OP at regular intervals.
 Prior to the OP authenticating and obtaining consent from the user, the OP returns an error.
-Once the OP has authenticated and obtained consent from the user, the OP responds by returning the ID Token.
-Unlike <span>[<a href="#RFC8628" class="cite xref">RFC8628</a>]</span> these POST contain a DPoP header.<a href="#section-1.10-1" class="pilcrow">¶</a></p>
-<p id="section-1.10-2">To obtain the ID Token, the RP authenticating component:<a href="#section-1.10-2" class="pilcrow">¶</a></p>
+Once the OP has authenticated and obtained consent from the user, the OP responds by returning the ID Token.<a href="#section-1.10-1" class="pilcrow">¶</a></p>
+<p id="section-1.10-2">In addition to the parameters required by <span>[<a href="#RFC8628" class="cite xref">RFC8628</a>]</span> the token request to the OP must contain a DPoP header.
+The RP authenticating component computes this DPoP header as follows:<a href="#section-1.10-2" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="normal type-1" id="section-1.10-3">
 <li id="section-1.10-3.1">
             <p id="section-1.10-3.1.1">generates a <code>c_hash</code> by computing a SHA256 hash of the authorization <code>device_code</code><a href="#section-1.10-3.1.1" class="pilcrow">¶</a></p>
