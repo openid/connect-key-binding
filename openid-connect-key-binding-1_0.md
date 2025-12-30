@@ -248,9 +248,9 @@ The OP MUST:
 As per [@!RFC8628] the RP authenticating component makes token requests to OP at regular intervals.
 Prior to the OP authenticating and obtaining consent from the user, the OP returns an error.
 Once the OP has authenticated and obtained consent from the user, the OP responds by returning the ID Token.
-Unlike [@!RFC8628] these POST contain a DPoP header.
 
-To obtain the ID Token, the RP authenticating component:
+In addition to the parameters required by [@!RFC8628] the token request to the OP must contain a DPoP header.
+The RP authenticating component computes this DPoP header as follows:
 
 1. generates a `c_hash` by computing a SHA256 hash of the authorization `device_code`
 2. converts the hash to BASE64URL
