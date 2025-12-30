@@ -58,7 +58,6 @@ organization="Cloudflare"
 
 .# Abstract
 
-
 OpenID Key Binding specifies how to bind a public key to an OpenID Connect ID Token using mechanisms defined in [@!RFC9449], OAuth 2.0 Demonstrating Proof of Possession (DPoP).
 
 {mainmatter}
@@ -77,7 +76,7 @@ The RP may also prove possession of the bound key when presenting an ID Token ba
 
 Use cases include: a mobile app that has received an ID Token exchanging the ID Token with a proof of possession with a first party authorization service for an access token; an instance of a peer to peer application such as video conferencing where one instance of the application sends the ID Token with a proof of possession to a second instance to prove which user is operating the first instance.
 
-This specification profiles OpenID Connect 1.0 [@!OpenID.Core], RFC8628 - OAuth 2.0 Device Authorization Grant [@!RFC8626], and RFC9449 - OAuth 2.0 Demonstrating Proof of Possession (DPoP) [@!RFC9449] to enable cryptographically bound ID Tokens that resist theft and replay attacks while maintaining compatibility with existing OpenID Connect infrastructure.
+This specification profiles OpenID Connect 1.0 [@!OpenID.Core], RFC8628 - OAuth 2.0 Device Authorization Grant [@!RFC8628], and RFC9449 - OAuth 2.0 Demonstrating Proof of Possession (DPoP) [@!RFC9449] to enable cryptographically bound ID Tokens that resist theft and replay attacks while maintaining compatibility with existing OpenID Connect infrastructure.
 
 
 ## Requirements Notation and Conventions
@@ -106,7 +105,9 @@ The parameters **dpop_jkt** and **DPoP** as defined in [@!RFC9449]
 
 ## Protocol Profile Overview
 
-This specification profiles how to bind a public key to an ID Token by:
+This specification profiles how to bind a public key to an ID Token.
+
+For the Authorization Code Flow:
 
 1. adding the `bound_key` scope and `dpop_jkt` parameter to the OpenID Connect Authentication Request
 2. receiving the authorization `code` as usual in the Authentication Response
@@ -130,13 +131,51 @@ This specification profiles how to bind a public key to an ID Token by:
 +------+                              +------+
 ```
 
+The Device Authorization Flow follows the pattern of the Authorization Code Flow but settings `c_hash` to `device_code` in place of the authorization `code`.
+
+1. adding the `bound_key` scope and `dpop_jkt` parameter to the OpenID Connect Authentication Request
+2. receiving the `device_code` as usual in the Device Authentication Response
+3. user opens browser to Verification URI
+4. user authentications and consents 
+5. adding the `DPoP` header that includes the hash of the `device code`, `c_hash`, as a claim in the Token Request to the OP `token_endpoint`
+6. adding the `cnf` claim containing the public key to the returned ID Token
+
+```
++----------+                              +------+
+|          |-- Authentication Request --->|      |
+|    RP    |   (1) bound_key & dpop_jkt   |  OP  |
+| (device  |                              |      |
+| client)  |<-- Authentication Response --|      |
+|          |   (2) device_code, user code |      |
+|          |       & Verification URI     |      |
+|          |                              |      |
+|          |   [polling]                  |      |
+|          |-- Token Request ------------>|      |
+|          |   (5) DPoP header w/ c_hash  |      |
+|          |   c_hash = device_code       |      |
+|          |                              |      |
+|          |<-- Token Response -----------|      |
+|          |   (6) cnf claim containing   |      |
+|          |   the public key in ID Token |      |
++----------+                              |      |
+      v                                   |      |
+      :                                   |      |
+     (3) user code & verification URI     |      |
+      :                                   |      |
+      v                                   |      |
++----------+                              |      |
+| End user |                              |      |
+|    at    |<-- (4). End user consents -->|      |
+|  browser |    & authenticates           |      |
++----------+                              +------+
+```
+
 ## OpenID Connect Metadata
 
 The OP's OpenID Connect Metadata Document [@!OpenID.Discovery] SHOULD include:
 
 - the `bound_key` scope in the `supported_scopes`
 - the `dpop_signing_alg_values_supported` property containing a list of supported algorithms as defined in [@?IANA.JOSE.ALGS]
-
 
 ## Authentication Request - Authorization Code Flow
 
@@ -158,7 +197,6 @@ Host: server.example.com
 
 If the OP does not support the `bound_key` scope, it SHOULD ignore it per [@!OpenID.Core] 3.1.2.1.
 
-
 ## Authentication Request - Device Authorization Flow
 
 If the RP authenticating component is running on a device that does not support a web browser, it makes an authorization request per [@!RFC8628] 3.1. In the request, the `scope` parameter MUST contain both `openid` and `bound_key`. The request MUST include the `dpop_jkt` parameter having the value of the JWK Thumbprint [@!RFC7638] of the proof-of-possession public key using the SHA-256 hash function, as defined in [@!RFC9449] section 10.
@@ -166,34 +204,54 @@ If the RP authenticating component is running on a device that does not support 
 Following is a non-normative example of an authentication request using the device authorization flow:
 
 ```text
-TBD
-
+POST /device/code?
+dpop_jkt=dnfb1T9jil_gOhti60baHs_WD_a4D8JN9VDJXbmBmGw
+&scope=openid%20profile%20email%20bound_key
+&client_id=s6BhdRkqt3
+&nonce=KDOmGsiiMaiq-ZhBE-RmPgCsrH-bs-wqbqD2FsRWf7g
+Host: server.example.com
 ```
-
 
 If the OP does not support the `bound_key` scope, it SHOULD ignore it per [@!OpenID.Core] 3.1.2.1.
 
+## Authentication Response - Authorization Code Flow
 
-## Authentication Response
-
-
-If the key provided was not previously bound to the client, the OP SHOULD inform a user and obtain consent that a key binding will be done. 
+If the key provided was not previously bound to the client, the OP SHOULD inform a user and obtain consent that a key binding will be done.
 
 On successful authentication of, and consent from the user, the OP returns an authorization `code`.
 
 Following is a non-normative example of a response:
 
 ```text
-TBD
+HTTP/1.1 302 Found
+  Location: https://client.example.org/cb?
+    code=SplxlOBeZQQYbYS6WxSbIA
+    &state=af0ifjsldkj
 ```
 
-## Token Request
+## Authentication Response - Device Authorization Flow
+
+As per [@!RFC8628] the, OP in response to the Authentication Request, generates and returns to the RP authenticating component the required parameters `device_code`, `user_code`, `verification_uri` and `expires_in` and may return the optional parameters `verification_uri_complete` and `interval`.
+
+Following is a non-normative example of an authentication response using the device authorization flow:
+
+```json
+{
+"device_code":"GmRhmhcxhwAzkoEqiMEg_DnyEysNkuNhszIySk9eS",
+"user_code":"059-461-148",
+"verification_uri":"https://client.example.org/device",
+"verification_uri_complete":"https://client.example.org/?user_code=059-461-148",
+"expires_in":300000
+}
+```
+
+## Token Request - Authorization Code Flow
 
 To obtain the ID Token, the RP authenticating component:
 
 1. generates a `c_hash` by computing a SHA256 hash of the authorization `code`
-2. converts the hash to BASE64URL 
-3. generates a `DPoP` header, including the `c_hash` claim in the `DPoP` header JWT. This binds the authorization code to the token request. 
+2. converts the hash to BASE64URL
+3. generates a `DPoP` header, including the `c_hash` claim in the `DPoP` header JWT. This binds the authorization code to the token request.
 
 Non-normative example of a confidential client setting `Authorization: Basic` per [@!OpenID.Core] 3.1.3.1:
 
@@ -217,12 +275,56 @@ grant_type=authorization_code&code=SplxlOBeZQQYbYS6WxSbIA
 
 If a DPoP header is included in the token request to the OP, and the `dpop_jkt` parameter was not included in the authentication request, the OP MUST NOT include the `cnf` claim in the ID Token.
 
-> This prevents an existing deployment using DPoP for access token from having them included in ID Tokens accidentally.
+> This prevents an existing deployment using DPoP for access token from having key-bound ID Tokens issued accidentally.
 
 The OP MUST:
 
 - perform all verification steps as described in [@!RFC9449] section 5.
 - calculate the `c_hash` from the authorization `code` just as the RP component did.
+- confirm the `c_hash` in the DPoP JWT matches its calculated `c_hash`
+
+## Token Request - Device Authorization Flow
+
+As per [@!RFC8628] the RP authenticating component makes token requests to OP at regular intervals.
+Prior to the OP authenticating and obtaining consent from the user, the OP returns an error.
+Once the OP has authenticated and obtained consent from the user, the OP responds by returning the ID Token.
+
+In addition to the parameters required by [@!RFC8628] the token request to the OP must contain a DPoP header.
+The RP authenticating component computes this DPoP header as follows:
+
+1. generates a `c_hash` by computing a SHA256 hash of the authorization `device_code`
+2. converts the hash to BASE64URL
+3. generates a `DPoP` header, including the `c_hash` claim in the `DPoP` header JWT. This binds the authorization `device_code` to the token request.
+
+Non-normative example of a token request:
+
+```text
+POST /token HTTP/1.1
+Host: server.example.com
+Content-Type: application/x-www-form-urlencoded
+Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
+DPoP: eyJhbGciOiJFUzI1NiIsImp3ayI6eyJjcnYiOiJQLTI1NiIsImt0eSI6\
+ IkVDIiwieCI6InVrcHYzZlU2dHFRS2FVd2NkQkFRb0szSUh2SklXX185eU5kMW\
+ 9SN3F2WmMiLCJ5IjoibkJCeFhyeDBOeml3Z19ldmZVTVVVZ25HS0tVZjJBVHBX\
+ RzlFb2puVW9VNCJ9LCJ0eXAiOiJkcG9wK2p3dCJ9.eyJjX2hhc2giOiJ6LTZLS\
+ k1GNjcxUFFLWFN1SUhBVlFmbkVWUjJ4MUFVc2ZIbHZDNTB2YTM4IiwiaHRtIjo\
+ iUE9TVCIsImh0dSI6Imh0dHBzOi8vc2VydmVyLmV4YW1wbGUuY29tL3Rva2VuI\
+ iwiaWF0IjoxNzYxOTM3NDQ5LCJqdGkiOiJJUVM1dFlQLWJwQlB0SnNvclQ0ejd\
+ nIn0.i162_6CXMAAP4BQ_fcDqPjU3wLfjJNSuxPqv995YlEa0Lj__13Lu4oytk\
+ g1HJy_T2eQwRDd_rKxKc9ClVWoeUQ
+grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code
+&device_code=GmRhmhcxhwAzkoEqiMEg_DnyEysNkuNhszIySk9eS
+&client_id=app_fzr7iWr50CWQkGDrLCZBYQc4_2Ak
+```
+
+If a DPoP header is included in the token request to the OP, and the `dpop_jkt` parameter was not included in the authentication request, the OP MUST NOT include the `cnf` claim in the ID Token.
+
+> This prevents an existing deployment using DPoP for access token from having key-bound ID Tokens issued accidentally.
+
+The OP MUST:
+
+- perform all verification steps as described in [@!RFC9449] section 5.
+- calculate the `c_hash` from the authorization `device_code` just as the RP component did.
 - confirm the `c_hash` in the DPoP JWT matches its calculated `c_hash`
 
 ## Token Response
