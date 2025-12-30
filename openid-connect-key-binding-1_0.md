@@ -105,7 +105,9 @@ The parameters **dpop_jkt** and **DPoP** as defined in [@!RFC9449]
 
 ## Protocol Profile Overview
 
-This specification profiles how to bind a public key to an ID Token by:
+This specification profiles how to bind a public key to an ID Token.
+
+For the Authorization Code Flow:
 
 1. adding the `bound_key` scope and `dpop_jkt` parameter to the OpenID Connect Authentication Request
 2. receiving the authorization `code` as usual in the Authentication Response
@@ -129,13 +131,51 @@ This specification profiles how to bind a public key to an ID Token by:
 +------+                              +------+
 ```
 
+The Device Authorization Flow follows the pattern of the Authorization Code Flow but settings `c_hash` to `device_code` in place of the authorization `code`.
+
+1. adding the `bound_key` scope and `dpop_jkt` parameter to the OpenID Connect Authentication Request
+2. receiving the `device_code` as usual in the Device Authentication Response
+3. user opens browser to Verification URI
+4. user authentications and consents 
+5. adding the `DPoP` header that includes the hash of the `device code`, `c_hash`, as a claim in the Token Request to the OP `token_endpoint`
+6. adding the `cnf` claim containing the public key to the returned ID Token
+
+```
++----------+                              +------+
+|          |-- Authentication Request --->|      |
+|    RP    |   (1) bound_key & dpop_jkt   |  OP  |
+| (device  |                              |      |
+| client)  |<-- Authentication Response --|      |
+|          |   (2) device_code, user code |      |
+|          |       & Verification URI     |      |
+|          |                              |      |
+|          |   [polling]                  |      |
+|          |-- Token Request ------------>|      |
+|          |   (5) DPoP header w/ c_hash  |      |
+|          |   c_hash = device_code       |      |
+|          |                              |      |
+|          |<-- Token Response -----------|      |
+|          |   (6) cnf claim containing   |      |
+|          |   the public key in ID Token |      |
++----------+                              |      |
+      v                                   |      |
+      :                                   |      |
+     (3) user code & verification URI     |      |
+      :                                   |      |
+      v                                   |      |
++----------+                              |      |
+| End user |                              |      |
+|    at    |<-- (4). End user consents -->|      |
+|  browser |    & authenticates           |      |
++----------+                              +------+
+```
+
 ## OpenID Connect Metadata
 
 The OP's OpenID Connect Metadata Document [@!OpenID.Discovery] SHOULD include:
 
 - the `bound_key` scope in the `supported_scopes`
-- the `dpop_signing_alg_values_supported` property containing a list of supported algorithms as defined in [@?IANA.JOSE.ALGS] 
-
+- the `dpop_signing_alg_values_supported` property containing a list of supported algorithms as defined in [@?IANA.JOSE.ALGS]
 
 ## Authentication Request - Authorization Code Flow
 
