@@ -107,67 +107,26 @@ The parameters **dpop_jkt** and **DPoP** as defined in [@!RFC9449]
 
 This specification profiles how to bind a public key to an ID Token.
 
-For the Authorization Code Flow:
-
-1. adding the `bound_key` scope and `dpop_jkt` parameter to the OpenID Connect Authentication Request
-2. receiving the authorization `code` as usual in the Authentication Response
-3. adding the `DPoP` header that includes the SHA-256 hash of the `code`, `c_s256`, as a claim in the Token Request to the OP `token_endpoint`
-4. adding the `cnf` claim containing the public key to the returned ID Token
+1. The RP requests a DPoP-bound Access Token with at least the `openid` and `bound_key` scope
+2. The RP sends a Token Exchange request adding the DPoP-bound Access Token in the request body and the DPoP proof in the `DPoP` header
+3. The OP issues an ID Token adding the `cnf` claim containing the public key from the DPoP-bound Access Token
 
 ```
-+------+                              +------+
-|      |-- Authentication Request --->|      |
-|  RP  |   (1) bound_key & dpop_jkt   |  OP  | 
-|      |                              |      | 
-|      |<-- Authentication Response --|      |
-|      |   (2) authorization code     |      | 
-|      |                              |      | 
-|      |-- Token Request ------------>|      |
-|      |   (3) DPoP header w/ c_s256  |      |
-|      |                              |      |
-|      |<-- Token Response -----------|      |
-|      |   (4) cnf claim containing   |      |
-|      |   the public key in ID Token |      | 
-+------+                              +------+
-```
-
-The Device Authorization Flow follows the pattern of the Authorization Code Flow but sets `c_s256` to SHA-256 of the `device_code` in place of the authorization `code`.
-
-1. adding the `bound_key` scope and `dpop_jkt` parameter to the OpenID Connect Authentication Request
-2. receiving the `device_code` as usual in the Device Authentication Response
-3. user opens browser to Verification URI
-4. user authentications and consents 
-5. adding the `DPoP` header that includes the SHA-256 hash of the `device code`, `c_s256`, as a claim in the Token Request to the OP `token_endpoint`
-6. adding the `cnf` claim containing the public key to the returned ID Token
-
-```
-+----------+                                +------+
-|          |-- Authentication Request ----->|      |
-|    RP    |   (1) bound_key & dpop_jkt     |  OP  |
-| (device  |                                |      |
-| client)  |<-- Authentication Response ----|      |
-|          |   (2) device_code, user code   |      |
-|          |       & Verification URI       |      |
-|          |                                |      |
-|          |   [polling]                    |      |
-|          |-- Token Request -------------->|      |
-|          |   (5) DPoP header w/ c_s256    |      |
-|          |   c_s256 = SHA256(device_code) |      |
-|          |                                |      |
-|          |<-- Token Response -------------|      |
-|          |   (6) cnf claim containing     |      |
-|          |   the public key in ID Token   |      |
-+----------+                                |      |
-      v                                     |      |
-      :                                     |      |
-     (3) user code & verification URI       |      |
-      :                                     |      |
-      v                                     |      |
-+----------+                                |      |
-| End user |                                |      |
-|    at    |<-- (4). End user consents ---->|      |
-|  browser |    & authenticates             |      |
-+----------+                                +------+
++------+                               +------+
+|      |              ...              |      |
+|  RP  |   (1) Request DPoP-bound      |  OP  |
+|      |       Access Token with scope |      |
+|      |       openid & bound_key      |      |
+|      |              ...              |      |
+|      |                               |      |
+|      |-- Token Exchange Request ---->|      |
+|      |   (2) Exchange Access Token   |      |
+|      |   with DPoP proof             |      |
+|      |                               |      |
+|      |<-- Token Exchange Response ---|      |
+|      |   (3) cnf claim containing    |      |
+|      |   the public key in ID Token  |      |
++------+                               +------+
 ```
 
 ## OpenID Connect Metadata
@@ -177,220 +136,204 @@ The OP's OpenID Connect Metadata Document [@!OpenID.Discovery] SHOULD include:
 - the `bound_key` scope in the `supported_scopes`
 - the `dpop_signing_alg_values_supported` property containing a list of supported algorithms as defined in [@?IANA.JOSE.ALGS]
 
-## Authentication Request - Authorization Code Flow
+## DPoP-bound ID Token Request
 
-If the RP authenticating component is running on a device that supports a web browser, it makes an authorization request per [@!OpenID.Core] 3.1. In addition to the `scope` parameter containing `openid`, and the `response_type` having the value `code`, the `scope` parameter MUST also include `bound_key`, and the request MUST include the `dpop_jkt` parameter having the value of the JWK Thumbprint [@!RFC7638] of the proof-of-possession public key using the SHA-256 hash function, as defined in [@!RFC9449] section 10.
+The RP authenticating component exchanges a DPoP-bound Access Token for a DPoP-bound ID Token at the OP's Token Endpoint.
 
-Following is a non-normative example of an authentication request using the authorization code flow:
+### DPoP-bound Access Token Requirements
 
-```text
-GET /authorize?
-response_type=code
-&dpop_jkt=dnfb1T9jil_gOhti60baHs_WD_a4D8JN9VDJXbmBmGw
-&scope=openid%20profile%20email%20bound_key
-&client_id=s6BhdRkqt3
-&state=af0ifjsldkj
-&nonce=2a50f9ea812f9bb4c8f7
-&redirect_uri=https%3A%2F%2Fclient.example.org%2Fcb HTTP/1.1
-Host: server.example.com
-```
+To obtain a DPoP-bound ID Token, the RP authenticating component needs a DPoP-bound Access Token with the following scopes granted:
 
-If the OP does not support the `bound_key` scope, it SHOULD ignore it per [@!OpenID.Core] 3.1.2.1.
+`openid`
+  **REQUIRED**.
+  Indicates that the RP is authorized to request an ID Tokens at all
 
-## Authentication Request - Device Authorization Flow
+`bound_key`
+  **REQUIRED**.
+  Indicates that the RP is authorized to request a DPoP-bound ID Token
 
-If the RP authenticating component is running on a device that does not support a web browser, it makes an authorization request per [@!RFC8628] 3.1. In the request, the `scope` parameter MUST contain both `openid` and `bound_key`. The request MUST include the `dpop_jkt` parameter having the value of the JWK Thumbprint [@!RFC7638] of the proof-of-possession public key using the SHA-256 hash function, as defined in [@!RFC9449] section 10.
+Further scopes related to ID Token claims, e.g., `profile`, `email`, `address`, ...
+  **OPTIONAL**.
+  Indicate that the RP is authorized to access corresponding identity claims.
+  The RP can request a subset of these claims for the DPoP-bound ID Token.
 
-Following is a non-normative example of an authentication request using the device authorization flow:
+Obtaining such a DPoP-bound Access Token is not in scope of this spec.
+Examples for obtaining them is a DPoP-bound Authorization Request (see [Section 5](https://datatracker.ietf.org/doc/html/rfc9449#section-5) of [@!RFC9449]) (Authorization Code Grant & Refresh Token Grant), or [Section 3](https://datatracker.ietf.org/doc/html/draft-parecki-oauth-dpop-device-flow-00#section-3) of [@!draft-parecki-oauth-dpop-device-flow-00] (Device Authorization Grant).
 
-```text
-POST /device/code?
-dpop_jkt=dnfb1T9jil_gOhti60baHs_WD_a4D8JN9VDJXbmBmGw
-&scope=openid%20profile%20email%20bound_key
-&client_id=s6BhdRkqt3
-&nonce=KDOmGsiiMaiq-ZhBE-RmPgCsrH-bs-wqbqD2FsRWf7g
-Host: server.example.com
-```
+> Using the Token Exchange mechanism to obtain a DPoP-bound ID Token instead of extending the ID Token in any of the existing authorization flows simplifies this spec and preserves downwards compatibility for classic ID Token usage.
 
-If the OP does not support the `bound_key` scope, it SHOULD ignore it per [@!OpenID.Core] 3.1.2.1.
+### DPoP Proof
 
-## Authentication Response - Authorization Code Flow
+To prove that the RP possesses the private key for the public key in the DPoP-bound Access Token's `cnf` claim, the RP MUST prepare a `DPoP` proof as specified in [Section 7](https://datatracker.ietf.org/doc/html/rfc9449#section-7) of [@!RFC9449].
+Therefore, the RP MUST compute the `ath` (Access Token Hash) for the DPoP-bound Access Token in the `subject_token` parameter as specified in [Section 4.2](https://datatracker.ietf.org/doc/html/rfc9449#section-4.2) of [@!RFC9449].
 
-If the key provided was not previously bound to the client, the OP SHOULD inform a user and obtain consent that a key binding will be done.
-
-On successful authentication of, and consent from the user, the OP returns an authorization `code`.
-
-Following is a non-normative example of a response:
-
-```text
-HTTP/1.1 302 Found
-  Location: https://client.example.org/cb?
-    code=SplxlOBeZQQYbYS6WxSbIA
-    &state=af0ifjsldkj
-```
-
-## Authentication Response - Device Authorization Flow
-
-As per [@!RFC8628] the, OP in response to the Authentication Request, generates and returns to the RP authenticating component the required parameters `device_code`, `user_code`, `verification_uri` and `expires_in` and may return the optional parameters `verification_uri_complete` and `interval`.
-
-Following is a non-normative example of an authentication response using the device authorization flow:
+Following is a non-normative example of the decoded DPoP proof header and payload:
 
 ```json
 {
-"device_code":"GmRhmhcxhwAzkoEqiMEg_DnyEysNkuNhszIySk9eS",
-"user_code":"059-461-148",
-"verification_uri":"https://client.example.org/device",
-"verification_uri_complete":"https://client.example.org/?user_code=059-461-148",
-"expires_in":300000
+  "typ":"dpop+jwt",
+  "alg":"ES256",
+  "jwk": {
+    "kty": "EC",
+    "x": "1CFjuS-kiH-FuZbrAJA9TfRdPM-928rD9nb4LiEFIrs",
+    "y": "qQjbtaUYLUlPP--IhWEbFYo5KU2XlCRaHitu1gpzv9Q",
+    "crv": "P-256"
+  }
+}
+.
+{
+  "jti": "e1j3V_bKic8-LAEB",
+  "htm": "POST",
+  "htu": "https://server.example.com/token",
+  "iat": 1562262618,
+  "ath": "fUHyO2r2Z3DZ53EsNrWBb0xWXoaNy59IiKCAqksmQEo"
 }
 ```
 
-## Token Request - Authorization Code Flow
+> The `ath` parameter binds the DPoP Proof to the lifetime of the DPoP-bound Access Token. Note that this DPoP proof might be successfully replayed within the Access Token lifetime.
 
-To obtain the ID Token, the RP authenticating component:
+### Token Exchange Request
 
-1. generates `c_s256` by computing SHA256 hash of the authorization `code` encoded as `BASE64URL(SHA256(code))`
-2. generates a `DPoP` header, including the `c_s256` claim in the `DPoP` header JWT. This binds the authorization `code` to the token request.
+The RP requests a Token Exchange as specified in [Section 2.1](https://datatracker.ietf.org/doc/html/rfc8693#name-request) of [@!RFC8693] using the following parameters:
 
-Non-normative example of a confidential client setting `Authorization: Basic` per [@!OpenID.Core] 3.1.3.1:
+`grant_type`
+  **REQUIRED**.
+  The value `urn:ietf:params:oauth:grant-type:token-exchange` indicates that a token exchange is being performed.
 
-```text
-POST /token HTTP/1.1
-Host: server.example.com
-Content-Type: application/x-www-form-urlencoded
-Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
-DPoP: eyJhbGciOiJFUzI1NiIsImp3ayI6eyJjcnYiOiJQLTI1NiIsImt0eSI6\
- IkVDIiwieCI6InVrcHYzZlU2dHFRS2FVd2NkQkFRb0szSUh2SklXX185eU5kMW\
- 9SN3F2WmMiLCJ5IjoibkJCeFhyeDBOeml3Z19ldmZVTVVVZ25HS0tVZjJBVHBX\
- RzlFb2puVW9VNCJ9LCJ0eXAiOiJkcG9wK2p3dCJ9.eyJjX3MyNTYiOiJvMXVCc\
- DllU2UzRHNtU2NOMGpZcmlGZ0tLRmRLLUJMeXdDOVdScFY1R0c4IiwiaHRtIjo\
- iUE9TVCIsImh0dSI6Imh0dHBzOi8vc2VydmVyLmV4YW1wbGUuY29tL3Rva2VuI\
- iwiaWF0IjoxNzYxOTM3NDQ5LCJqdGkiOiJJUVM1dFlQLWJwQlB0SnNvclQ0ejd\
- nIn0.ay7H-sV7o_NE19Qfdq7oFNZ_oH-8LRw7_dgiTRQAUusLjEhgzNYR1ZU1T\
- 6IZGopiTEk55LPu_g0gKKku96d4kA
-grant_type=authorization_code&code=SplxlOBeZQQYbYS6WxSbIA
-&redirect_uri=https%3A%2F%2Fclient.example.org%2Fcb
-```
+`requested_token_type`
+  **REQUIRED**.
+  The value `urn:ietf:params:oauth:token_type:ic_token` indicates that a DPoP-bound Identity Certification Token is being requested.
 
-`Authorization: Basic` HTTP header is only included if a confidential client is used.
+`subject_token_type`
+  **REQUIRED**.
+  The value `urn:ietf:params:oauth:token_type:dpop` indicates that a DPoP-bound Access Token is being used in the `subject_token` parameter.
 
-If a DPoP header is included in the token request to the OP, and the `dpop_jkt` parameter was not included in the authentication request, the OP MUST NOT include the `cnf` claim in the ID Token.
+`subject_token`
+  **REQUIRED**.
+  A DPoP-bound Access Token containing the scope `openid`, `bound_key`, and optional OpenID Connect identity scope related scopes.
 
-> This prevents an existing deployment using DPoP for access token from having key-bound ID Tokens issued accidentally.
+`audience`
+  **OPTIONAL**.
+  The logical name of the target service where the RP intends to use the requested DPoP-bound ID Token.
 
-The OP MUST:
+`scope`
+  **OPTIONAL**.
+  A list of space-delimited, case-sensitive strings, as defined in [Section 3.3](https://www.rfc-editor.org/rfc/rfc6749#section-3.3) of [@!RFC6749], that allow the RP to specify which identity claims are expected to be present in the requested DPoP-bound ID Token.
+  Typically, only OpenID Connect related scopes, such as those defined in [Section 5.4](https://openid.net/specs/openid-connect-core-1_0.html#ScopeClaims) in OpenID Core, are used here.
+  This allows the RP to reduce the set of identity claims contained in the DPoP-bound ID Token compared to the identity claims contained in the ID Token.
+  The scopes `openid` and `bound_key` MAY not be provided here.
+  The OP MUST ignore all scopes that are not present in the provided DPoP-bound Access Token from the `subject_token` parameter.
 
-- perform all verification steps as described in [@!RFC9449] section 5.
-- calculate the `c_s256` from the authorization `code` just as the RP component did.
-- confirm the `c_s256` in the DPoP JWT matches its calculated `c_s256`
+*TBD: What about `resource`, `actor_token`, `actor_token_type`?*
 
-## Token Request - Device Authorization Flow
+The RP MUST add the DPoP Proof to the `DPoP` header of the Token Exchange request.
 
-As per [@!RFC8628] the RP authenticating component makes token requests to OP at regular intervals.
-Prior to the OP authenticating and obtaining consent from the user, the OP returns an error.
-Once the OP has authenticated and obtained consent from the user, the OP responds by returning the ID Token.
-
-In addition to the parameters required by [@!RFC8628] the token request to the OP must contain a DPoP header.
-The RP authenticating component computes this DPoP header as follows:
-
-1. generates `c_s256` by computing SHA-256 hash of the authorization `device_code` encoded as `BASE64URL(SHA256(device_code))`
-2. generates a `DPoP` header, including the `c_s256` claim in the `DPoP` header JWT. This binds the authorization `device_code` to the token request.
-
-Non-normative example of a token request:
+Non-normative example of a confidential client setting `Authorization: Basic` per [Section 3.1.3.1](https://openid.net/specs/openid-connect-core-1_0.html#TokenRequest) of [@!OpenID.Core] foro a Token Exchange request:
 
 ```text
 POST /token HTTP/1.1
 Host: server.example.com
 Content-Type: application/x-www-form-urlencoded
 Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
-DPoP: eyJhbGciOiJFUzI1NiIsImp3ayI6eyJjcnYiOiJQLTI1NiIsImt0eSI6\
- IkVDIiwieCI6InVrcHYzZlU2dHFRS2FVd2NkQkFRb0szSUh2SklXX185eU5kMW\
- 9SN3F2WmMiLCJ5IjoibkJCeFhyeDBOeml3Z19ldmZVTVVVZ25HS0tVZjJBVHBX\
- RzlFb2puVW9VNCJ9LCJ0eXAiOiJkcG9wK2p3dCJ9.eyJjX3MyNTYiOiJ6LTZLS\
- k1GNjcxUFFLWFN1SUhBVlFmbkVWUjJ4MUFVc2ZIbHZDNTB2YTM4IiwiaHRtIjo\
- iUE9TVCIsImh0dSI6Imh0dHBzOi8vc2VydmVyLmV4YW1wbGUuY29tL3Rva2VuI\
- iwiaWF0IjoxNzYxOTM3NDQ5LCJqdGkiOiJJUVM1dFlQLWJwQlB0SnNvclQ0ejd\
- nIn0.9t65IuqqvabsJp4v9CpY_pj7ad97KCdR9LXXF-pFvUokP_h2OZ2KqlM10\
- O-l-vebFVHk0qbm1pcw3MWH_VhO7A
-grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code
-&device_code=GmRhmhcxhwAzkoEqiMEg_DnyEysNkuNhszIySk9eS
-&client_id=app_fzr7iWr50CWQkGDrLCZBYQc4_2Ak
+DPoP: eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0\
+  eSI6IkVDIiwieCI6IjFDRmp1Uy1raUgtRnVaYnJBSkE5VGZSZFBNLTkyOHJE\
+  OW5iNExpRUZJcnMiLCJ5IjoicVFqYnRhVVlMVWxQUC0tSWhXRWJGWW81S1Uy\
+  WGxDUmFIaXR1MWdwenY5USIsImNydiI6IlAtMjU2In19.eyJqdGkiOiJlMWo\
+  zVl9iS2ljOC1MQUVCIiwiaHRtIjoiUE9TVCIsImh0dSI6Imh0dHBzOi8vc2V\
+  ydmVyLmV4YW1wbGUuY29tL3Rva2VuIiwiaWF0IjoxNTYyMjYyNjE4LCJhdGg\
+  iOiJmVUh5TzJyMlozRFo1M0VzTnJXQmIweFdYb2FOeTU5SWlLQ0Fxa3NtUUV\
+  vIn078vI2oMOU4OLdfzgdE7_YfrIVDzNXP8NpBxnOwPA8ym7CbmqzgSQnpxs\
+  EHT5C_tNEaZ8z6OSdXhrWArpwg17qA
+grant_type=urn:ietf:params:oauth:grant-type:token-exchange
+&requested_token_type=urn:ietf:params:oauth:token_type:ic_token
+&subject_token_type=urn:ietf:params:oauth:token_type:dpop
+&subject_token=Kz~8mXK1EalYznwH-LC-1fBAo.4Ljp~zsPE_NeO.gxU
+&audience=authenticating-party
+&scope=profile%20email
 ```
 
-If a DPoP header is included in the token request to the OP, and the `dpop_jkt` parameter was not included in the authentication request, the OP MUST NOT include the `cnf` claim in the ID Token.
+### DPoP-bound ID Token Request Validation
 
-> This prevents an existing deployment using DPoP for access token from having key-bound ID Tokens issued accidentally.
+The OP MUST perform the following validation steps:
 
-The OP MUST:
+1. The DPoP-bound Access Token from the `subject_token` parameter MUST be valid.
+2. The DPoP Proof MUST be valid and its `ath` claim must be equal to the `subject_token`'s hash.
+3. The `subject_token`'s public key contained in its `cnf` claim MUST be equal to the DPoP Proof's public key contained in the `jwk` header.
+4. If the RP is a confidential client, the OP MUST successfully authenticate the RP.
+5. All scopes within the `scope` parameter not present in the `subject_token`'s scope MUST be ignored.
+6. Remaining scopes MUST contain the scope `openid` and `bound_key`.
 
-- perform all verification steps as described in [@!RFC9449] section 5.
-- calculate the `c_s256` from the authorization `device_code` just as the RP component did.
-- confirm the `c_s256` in the DPoP JWT matches its calculated `c_s256`
+## DPoP-bound ID Token Response
 
-## Token Response
+### DPoP-bound ID Token Structure
 
-If the token request was successful, the OP MUST return an ID Token containing the `cnf` claim as defined in [@!RFC7800] set to the jwk of the user's public key and with  `typ` set to `id_token+cnf` in the ID Token's protected header.
+If the Token Exchange request was successful, the OP MUST return an ID Token containing the `cnf` claim as defined in [@!RFC7800] set to the jwk of the user's public key and with `typ` set to `id_token+cnf` in the ID Token's protected header.
 
 Non-normative example of the ID Token payload:
 
 ```json
 {
-    "iss": "https://server.example.com",
-    "sub": "24400320",
-    "aud": "s6BhdRkqt3",
-    "nonce": "n-0S6_WzA2Mj",
-    "exp": 1311281970,
-    "iat": 1311280970,
-    "cnf":
-        {
-            "jwk": {
-                "crv": "P-256",
-                "kty": "EC",
-                "x": "ukpv3fU6tqQKaUwcdBAQoK3IHvJIW__9yNd1oR7qvZc",
-                "y": "nBBxXrx0Nziwg_evfUMUUgnGKKUf2ATpWG9EojnUoU4"
-            }
-        }
+  "iss": "https://server.example.com",
+  "sub": "24400320",
+  "aud": "s6BhdRkqt3",
+  "nonce": "n-0S6_WzA2Mj",
+  "exp": 1311281970,
+  "iat": 1311280970,
+  "cnf": {
+    "jwk": {
+      "crv": "P-256",
+      "kty": "EC",
+      "x": "ukpv3fU6tqQKaUwcdBAQoK3IHvJIW__9yNd1oR7qvZc",
+      "y": "nBBxXrx0Nziwg_evfUMUUgnGKKUf2ATpWG9EojnUoU4"
+    }
+  }
 }
 ```
 
-The OP MAY return a Refresh Token.
-If a Refresh Token is returned, it MUST be bound the public key of the DPoP proof used in the Token Request i.e. the same public key bound to the ID Token.
+### Token Exchange Response
 
-## Refresh Request
+The OP responds with the following parameters.
 
-If a Refresh Token was returned in the Token Response, the RP may use the Refresh Token to make Refresh Requests to the OP's Token Endpoint and receive a refreshed ID Token ([@!OpenID.Core] 12).
-This Refresh Token MUST be bound to the same public key as the ID Token and the OP MUST validate a DPoP proof for this public key on each refresh request.
+`access_token`
+  **REQUIRED**. The DPoP-bound ID Token.
 
-To refresh the ID Token, the RP authenticating component:
+`issued_token_type`
+  **REQUIRED**.  The value `urn:ietf:params:oauth:token_type:ic_token` indicates that the issued token in the `access_token` parameter is a DPoP-bound Identity Certification Token.
 
-1. generates a `DPoP` header
-2. makes a POST request to the OP's Token Endpoint with the `DPoP` header and the Refresh Token as a parameter.
+`token_type`
+  **REQUIRED**. The value `DPoP` indicates that the issued DPoP-bound ID Token must be used as a DPoP token.
 
-Non-normative example:
+`expires_in`
+  **RECOMMENDED**. The validity lifetime, in seconds, of the DPoP-bound ID token issued by the OP.
+
+`scope`
+  **OPTIONAL**. The subset of space-delimited scopes from the token exchange request being applied to the DPoP-bound ID Token.
+
+The OP MUST NOT issue a Refresh Token for the DPoP-bound ID Token.
+
+The DPoP-bound ID Token's expiration time (`exp` claim) MUST NOT exceed the exchanged Access Token expiration time.
+
+Following is a non-normative example of a DPoP-bound ID Token response using the token exchange:
 
 ```text
-POST /token HTTP/1.1
-Host: server.example.com
-Content-Type: application/x-www-form-urlencoded
-DPoP: eyJhbGciOiJFUzI1NiIsImp3ayI6eyJjcnYiOiJQLTI1NiIsImt0eSI6\
- IkVDIiwieCI6InVrcHYzZlU2dHFRS2FVd2NkQkFRb0szSUh2SklXX185eU5kMW\
- 9SN3F2WmMiLCJ5IjoibkJCeFhyeDBOeml3Z19ldmZVTVVVZ25HS0tVZjJBVHBX\
- RzlFb2puVW9VNCJ9LCJ0eXAiOiJkcG9wK2p3dCJ9.eyJodG0iOiJQT1NUIiwia\
- HR1IjoiaHR0cHM6Ly9zZXJ2ZXIuZXhhbXBsZS5jb20vdG9rZW4iLCJpYXQiOjE\
- 3NjE5Mzc4MjMsImp0aSI6ImJHOXpaV1psYm1ObFkyaHZiM05sY20ifQ.NVmGXw\
- opPNYiN7CpITgR0Fl1PYFFgIAbxPxs8N1llDPoQmR60il35b-Zez71eMkdM9gd\
- oqJkee3oKrimdrsCfA
-grant_type=refresh_token&refresh_token=8xLOxBtZp8
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: no-store
+
+{
+  "access_token": "[TBD: DPoP-bound ID Token]",
+  "issued_token_type": "urn:ietf:params:oauth:token_type:ic_token",
+  "token_type": "DPoP",
+  "expires_in": 3599,
+  "scope": "profile email"
+}
 ```
 
-The OP MUST validate the Refresh Token and MUST validate the `DPoP` header presented.
-THE OP MUST reject the `DPoP` header if it is not signed with the public key that was bound to the presented Refresh Token in the initial Token Request.
+## Token Refresh
 
-If an ID Token is returned as a result of a Refresh Request, an additional requirement applies:
+The RP refreshes expired DPoP-bound ID Tokens by sending a new Token Exchange request with a valid DPoP-bound Access Token.
 
-- its `cnf` claim MUST be the same as in the ID Token issued when the original authentication occurred.
-
-If a new Refresh Token is returned as a result of a Refresh Request, the newly issued Refresh Token MUST continue to be bound to the same public key as the original Refresh Token.
+If the DPoP-bound Access Token is expired, the RP refreshes it with a DPoP-bound Refresh Token from the Token response as described in [Section 5](https://datatracker.ietf.org/doc/html/rfc9449#section-5) of [@!RFC9449].
 
 ## ID Token Proof of Possession
 
