@@ -27,6 +27,15 @@ organization="Cloudflare"
     email = "ethan.r.heilman@gmail.com"
 
 %%%
+<reference anchor="OIDC2" target="https://doi.org/10.1109/OJCOMS.2024.3376193">
+  <front>
+    <title>OIDC²: Open Identity Certification With OpenID Connect</title>
+    <author fullname="Jonas Primbs" initials="J." surname="Primbs"/>
+    <author fullname="Michael Menth" initials="M." surname="Menth"/>
+    <date year="2024" month="March" day="11"/>
+  </front>
+</reference>
+
 <reference anchor="OpenID.Core" target="https://openid.net/specs/openid-connect-core-1_0.html">
   <front>
     <title>OpenID Connect Core 1.0 (incorporating errata set 2)</title>
@@ -64,20 +73,44 @@ OpenID Key Binding specifies how to bind a public key to an OpenID Connect ID To
 
 # Introduction
 
-OpenID Connect is a protocol that enables a Relying Party (RP) to delegate authentication and obtain identity claims to an OpenID Connect Provider (OP).
+OpenID Connect (OIDC) enables a Relying Party (RP) to obtain End User (EU) authentication and identity claims from an OpenID Provider (OP) in the form of an ID Token.
+In OIDC, the RP uses a unique `nonce` parameter to correlate an authentication request with the resulting ID Token signed by the OP.
+However, in deployments where an RP consists of multiple components, ID Tokens are often used as bearer tokens being shared between the components to authenticate the EU.
+This introduces the risk of token theft and token replay, allowing attackers to impersonate End Users among RP components.
 
-When authenticating with OpenID Connect, an RP provides a nonce in its authentication request. The ID Token signed and returned by the OP contains the nonce and claims about the user. When verifying the ID Token, the RP confirms it contains the nonce, binding the session that made the request to the response.
-
-It is common for an RP to be composed of multiple components such as a RP authenticating component that  obtains the ID Token from the OP and an RP consuming component which checks the ID Token presented to it by the authenticating component. When the RP authenticating component wants to prove to an RP consuming component that it has authenticated a user, it may present the ID Token as a bearer token. However, bearer tokens are vulnerable to theft and replay attacks - if an attacker obtains the ID Token, they can impersonate the authenticated user.
-
-By binding a cryptographic key to the ID Token, the RP authenticating component can prove to RP consuming components not only that a user has been authenticated, but that the RP authenticating component itself was the original recipient of that authentication. This transforms the ID Token from a vulnerable bearer token into a proof-of-possession token that provides stronger security guarantees.
-
-The RP may also prove possession of the bound key when presenting an ID Token back to the OP.
-
-Use cases include: a mobile app that has received an ID Token exchanging the ID Token with a proof of possession with a first party authorization service for an access token; an instance of a peer to peer application such as video conferencing where one instance of the application sends the ID Token with a proof of possession to a second instance to prove which user is operating the first instance.
+This specification defines a mechanism to bind a cryptographic key to the ID Token.
+The RP Authenticating Component initially authenticates the EU by verifying the `nonce` and uses its cryptographic key to demonstrate possession of the ID Token to RP Consuming Components.
+This transforms the ID Token into a key-bound ID Token while preserving interoperability with existing OIDC deployments.
 
 This specification profiles OpenID Connect 1.0 [@!OpenID.Core], RFC8628 - OAuth 2.0 Device Authorization Grant [@!RFC8628], and RFC9449 - OAuth 2.0 Demonstrating Proof of Possession (DPoP) [@!RFC9449] to enable cryptographically bound ID Tokens that resist theft and replay attacks while maintaining compatibility with existing OpenID Connect infrastructure.
 
+## Use Cases
+
+This specification addresses the following classes of use cases:
+
+1. End User authentication between RP **components**.
+2. End User authentication between RP **instances**.
+
+### 1. Authentication between RP components
+
+Most RP implementations consist of multiple components, such as a user-facing component (either running in the server backend or in the user's browser) that performs authentication and one or more backend services that rely on the resulting identity.
+
+In such architectures, the authenticating component commonly forwards the ID Token to other components.
+If the ID Token is treated as a bearer token, any party in possession of the token can use it to access these components, making it vulnerable to token theft or token replay attacks.
+
+With key-bound ID Tokens, the RP Authenticating Component binds a cryptographic key to the ID Token and demonstrates possession of the corresponding private key when presenting the token.
+The RP Consuming Component can verify this proof and ensure that the token is used by the legitimate presenter.
+
+### 2. Authentication between RP instances
+
+In end-to-end communication or peer-to-peer scenarios, one RP instance may need to convey the identity of its EU to another RP instance.
+
+If an ID Token is shared as a bearer token, the receiving RP or any intermediary can replay or forward the token to impersonate the EU.
+
+With key-bound ID Tokens, the RP Authenticating Instance demonstrates possession of the bound key when transmitting the token.
+The RP Receiving Instance can verify both the identity claims and that the presenter is the legitimate holder of the token.
+
+These patterns are applicable to decentralized or federated communication systems, including but not limited to WebRTC-based conferencing, Matrix-based messaging, and PGP-based emailing, as described in the OIDC² proposal [@!OIDC2].
 
 ## Requirements Notation and Conventions
 
