@@ -100,8 +100,8 @@ Most RP implementations consist of multiple components, such as a user-facing co
 In such architectures, the authenticating component commonly forwards the ID Token to other components.
 If the ID Token is treated as a bearer token, any party in possession of the token can use it to access these components, making it vulnerable to token theft or token replay attacks.
 
-With key-bound ID Tokens, the RP Authenticating Component binds a cryptographic key to the ID Token and demonstrates possession of the corresponding private key when presenting the token.
-The RP Consuming Component can verify this proof and ensure that the token is used by the legitimate presenter.
+With key-bound ID Tokens, the RP authenticating component binds a cryptographic key to the ID Token and demonstrates possession of the corresponding private key when presenting the token.
+The RP consuming component can verify this proof and ensure that the token is used by the legitimate presenter.
 
 ### 2. Authentication between RP instances
 
