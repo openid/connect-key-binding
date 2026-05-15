@@ -77,16 +77,17 @@ OpenID Connect (OIDC) enables a Relying Party (RP) to obtain End User (EU) authe
 When authenticating with OIDC, an RP initiates the protocol by sending an authentication request to the OP that contains a nonce.
 In response, the OP authenticates the End User's identity and sends the RP an ID Token, signed by the OP, containing claims about the user and the requested nonce.
 
-In applications composed of multiple RP components, the RP authenticating component requests and obtains the ID Token from the OP and may present it as a bearer token to one or more RP consuming components for authentication as the End User.
+In applications composed of multiple RP components, e.g., a frontend and a backend component, the RP authenticating component (e.g., the frontend) requests and obtains the ID Token from the OP and may present it as a bearer token to one or more RP consuming components (e.g., multiple backends) for authentication as the End User.
 However, bearer tokens are vulnerable to theft and replay attacks, allowing attackers to impersonate End Users in such RP component-to-component communication use cases.
-In messaging or conferencing applications where humans communicate securely, the RP authenticating instance requests and obtains the ID Token from the OP and may present it as a bearer token to one or more RP consuming instances for authentication as the End User.
-However, attackers may extract the End User's ID Token from their RP consuming instance and replay it to impersonate the End User in such RP instance-to-instance communication use cases.
-Detailed use cases are explained in [Appendix A](#Appendix-A.-Use-Cases).
+
+Other use cases include, but are not limited to, messaging or conferencing applications.
+In these use cases, the RP authenticating component (e.g., an email client sending a mail) and the RP consuming component (e.g., an email client receiving the mail) are not necessarily the same software.
+However, in the context of email communication, they MAY act as instances of the same Relying Party (e.g., "email client").
+To prevent the End User of the RP consuming component from replaying the ID Token to impersonate the End User of the RP authenticating component (e.g., an attacker who received a mail with the sender's ID Token and replays it to another End User), the ID Token must be constrained to its sender.
 
 This specification defines a mechanism to bind a cryptographic key to the ID Token.
 The RP authenticating component can use this key to prove to RP consuming components that not only a user has been authenticated, but that the RP authenticating component itself was the original recipient of that authentication.
 This provides stronger security guarantees, preventing token theft and replay attacks, by transforming the ID Token from a bearer token into a proof-of-possession token.
-This transforms the ID Token into a key-bound ID Token while preserving interoperability with existing OIDC deployments.
 
 This specification profiles OpenID Connect 1.0 [@!OpenID.Core], RFC8628 - OAuth 2.0 Device Authorization Grant [@!RFC8628], and RFC9449 - OAuth 2.0 Demonstrating Proof of Possession (DPoP) [@!RFC9449] to enable cryptographically bound ID Tokens that resist theft and replay attacks while maintaining compatibility with existing OpenID Connect infrastructure.
 
@@ -414,6 +415,18 @@ The mechanism for how an RP authenticating component proves to an RP consuming c
 
 An RP authenticating component SHOULD only share an ID Token with a consuming component when such sharing is consistent with the original purpose for which the identity data was collected and the scope of consent obtained from the user.
 
+If the RP consuming parties are expected to be controlled by third-party End Users (see the peer-to-peer applications in [Appendix A.2](#2.-peer-to-peer-authentication)), the consent screen at the OP MUST make it clear to the End-User that any identity claims relating to the granted scopes will be shared with and accessed by these third-party users.
+
+## Unique ID Tokens
+
+Per session, the RP authenticating component MAY require multiple individual ID Tokens.
+
+* *Example 1*: Alice's RP authenticates in direct Matrix chats with Bob and Charly.
+  This requires two individual OIDC key pairs and results in two individual key-bound ID Tokens.
+* *Example 2*: Alice wants to be authenticated to Bob with her name and her email address.
+  To Charly, Alice only wants to share her name.
+  This requires Alice's RP to request key-bound ID Tokens with two distinct scopes, resulting in two different sets of identity claims.
+
 # Security Considerations
 
 ## Public Key Substitution Attacks
@@ -442,6 +455,31 @@ To prevent token confusion attacks, the RP authenticating component SHOULD bind 
 
 The `cnf` claim in the ID Token MUST be verified together with a proof of possession and MUST NOT be treated as proof on its own. A proof of possession is REQUIRED to establish that a party controls the key identified by `cnf`. The `cnf` claim SHOULD only be used to bind a signed object with the other claims in the ID Token.
 
+## Audience Claim
+
+Key-bound ID Tokens may be shared by RP authenticating components with RP consuming components that identify themselves to different audiences.
+*Example 1 (frontend/backend)*: RP authenticating component = `bitwarden-android`, RP consuming component = `vaultwarden-backend`.
+*Example 2 (different platforms)*: RP authenticating component = `myapp-android`, RP consuming component = `myapp-ios`.
+
+However, the audience claim `aud` MUST be strictly verified.
+As it is recommended to use different client IDs for different platforms, two options remain:
+
+1. Use a dedicated audience for end-to-end use cases, e.g., `bitwarden-protocol`, or
+1. Accept a static list of expected audiences, e.g., `myapp-android`, and `myapp-ios`.
+
+## Validity Period
+
+Validity periods of key-bound ID Tokens depend on use cases.
+In real-time communication systems (e.g., video conferencing), ID Tokens can be extremely short-lived (< 1 minute) because they are only needed to initially authenticate the P2P channel.
+However, the time drift between the RP authenticating component and the RP consuming component has to be taken into account.
+In near-real-time communication systems (e.g., instant messaging with matrix), short validity periods (< 10 minutes) are sufficient because identity verification processes can be repeated if the RP consuming component is offline, and ID Tokens must be valid when the RP consuming component receives the token.
+In asynchronous communication systems (e.g., email), longer validity periods are preferable (> 1 day) because ID Tokens must be valid on the first message (email) lookup.
+
+## Group Communication
+
+When the RP authenticating component is authenticated as the End User in group communication (e.g., video conferences or group chats with more than 2 participants), using a single key-bound ID Token is preferred over multiple individual key-bound ID Tokens.
+This improves performance because the RP authenticating component must create one instead of n (= number of participants) ephemeral key pairs, and the OP must issue one instead of n ID Tokens.
+
 # IANA Considerations
 
 The following entry should be added to the "Media Types" registry for the new JWT type:
@@ -454,89 +492,26 @@ Subtype name: dpop+id_token
 
 # Appendix A. Use Cases
 
-This appendix addresses the following classes of use cases:
+## 1. Zero-Trust in distributed Relying Parties
 
-1. End User authentication from RP authenticating **component** to RP consuming **component**.
-2. End User authentication from RP authenticating **instances** to RP consuming **instance**.
+It is common that applications consist of multiple components (typically a frontend and a backend).
+In these applications, the user-facing component (the frontend) typically initiates the authentication flow by providing a nonce and authenticates the End User with the ID Token issued by the OP, which contains identity claims and the requested nonce.
+RP consuming components (the backends) authenticate the RP authenticating component as the End User using the ID Token included as a bearer token in the request.
 
-## 1. RP Component-to-Component Authentication
+If communication between these RP components is compromised, attackers can steal the ID Token and use it to send malicious authenticated requests to the RP consuming components.
+Binding the ID Token to the RP authenticating component's key pair mitigates these attacks because attackers cannot use a key-bound ID Token without providing valid proof of possession of the corresponding private key, which only the RP authenticating component knows.
 
-Most RP implementations consist of multiple components, such as a user-facing component (either running in the server backend or in the user's browser) that performs authentication and one or more backend services that rely on the resulting identity.
-In such architectures, the authenticating component commonly forwards the ID Token to other components.
-If the ID Token is treated as a bearer token, any party in possession of the token can use it to access these components, making it vulnerable to token theft or token replay attacks.
+## 2. Peer-to-Peer authentication
 
-One example for this use case is the OpenSearch project, where the user-facing component (OpenSearch Dashboards) requests and obtains the ID Token from the OP, and the database backend (OpenSearch) verifies the ID Token.
+Assuming Bob wants to authenticate Alice using her OIDC identity in a peer-to-peer application, e.g., a WebRTC-based video conference.
+With classic OIDC, Mallory could replay a nonce provided by Bob to Alice, who would initiate an OIDC authentication flow with her RP authenticating component.
+Alice would then respond to Mallory with her ID Token issued by the OP, containing her identity claims and the nonce replayed by Mallory.
+Mallory can then forward the ID Token along with a malicious message to Bob.
+Bob would then authenticate Mallory with Alice's OIDC identity and believe that this message was written by Alice.
 
-With key-bound ID Tokens, the RP authenticating component binds a cryptographic key to the ID Token and demonstrates possession of the corresponding private key when presenting the token.
-The RP consuming component can verify this proof and ensure that the token is used by the legitimate presenter.
-
-### Examples
-
-TBD
-
-### Requirements
-
-TBD
-
-## 2. RP Instance-to-Instance Authentication
-
-In end-to-end communication or peer-to-peer scenarios, one RP instance may need to convey the identity of its EU to another RP instance.
-If an ID Token is shared as a bearer token, the receiving RP or any intermediary can replay or forward the token to impersonate the EU.
-
-Examples of this use case include applications where users interact with one another, e.g., video conferences (either decentralized via WebRTC, such as Jitsi Meet, or centralized via servers, such as Zoom), instant messaging (such as Matrix), and collaboration applications (such as Slack or HackMD).
-
-With key-bound ID Tokens, the RP authenticating instance demonstrates possession of the bound key when transmitting the token.
-The RP receiving instance can verify both the identity claims and that the presenter is the legitimate holder of the token.
-
-### Examples
-
-The OIDC² proposal [@!OIDC2] explicitly describes the application of this concept to the Matrix instant messaging protocol, the OpenPGP protocol for email communication, WebRTC-based video conferencing, and end-to-end authenticated communication between clients and servers on the application layer through untrusted proxies.
-
-For all these use cases, after the OP has authenticated the End User, the RP authenticating instance generates an ephemeral OIDC key pair and proves possession of the corresponding private key to the OP.
-Then, the OP issues an ID Token to the RP, bound to the OIDC key pair and containing the End User's identity claims.
-
-When the RP authenticating instance authenticates with the End User's OIDC identity to the RP consuming instance, it provides the key-bound ID Token along with application-specific proof of possession.
-
-For Matrix and OpenPGP, the general idea is to establish a mutual cryptographic binding between the application-specific key pair (the Matrix identity key pair / the PGP primary key pair) and the RP's OIDC key pair to which the ID Token is bound.
-Therefore, the RP (the Matrix client or email client) signs the application-specific public key (the Matrix identity public key, or the PGP certificate) with its OIDC private key and uses the signature as proof of possession to bind the OIDC identity to the application identity.
-Then, the RP binds the application identity to the OIDC identity in an application-specific way, e.g., by sending the ID Token and proof of possession as a Matrix chat message signed with the Megolm signing key that is attested with the Matrix identity key, or by sending the ID Token and proof of possession in the signed part of an email signed with the PGP signing key that is attested with the PGP primary key.
-The advantage of binding the OIDC identity to the application-specific identity is that the short-lived key-bound ID Token is used only for one-time attestation of the OIDC identity, without affecting application-specific security properties.
-
-For simple WebRTC-based P2P communication in which no application-specific identity concept exists, the RP authenticating instance sends the ID Token and proof of possession over the mTLS-protected P2P connection.
-Therefore, the proof of possession must be unique to the channel, e.g., the concatenated X.509 thumbprints of the RP authenticating and RP consuming instances signed with the key that the ID Token is bound to.
-For end-to-end authenticated communication between clients (RP authenticating component) and servers (RP consuming component), clients use DPoP [@!RFC9449] for authentication and HTTP Message Signatures [@!RFC9421] for integrity protection.
-
-### Requirements
-
-**1. Privacy & Identity Claims**
-Key-bound ID Tokens are intended to be shared with third parties.
-For privacy reasons, End Users must be able to reduce the identity claims revealed by the shared ID Token.
-NOTE: scopes like `profile` (which grants identity claims like `name`, `birthdate`, `gender`, `preferred_username`, `picture`, ...) might not be granular enough.
-
-**2. Audience**
-Key-bound ID Tokens may be shared by RP authenticating instances with RP consuming instances that identify themselves with different audiences.
-*Example 1 (Matrix)*: RP authenticating instance = `matrix-android`, RP consuming instance = `matrix-ios`.
-*Example 2 (Client-Server)*: RP authenticating instance = `bitwarden-android`, RP consuming instance = `vaultwarden-backend`.
-
-**3. Validity Period**
-Validity periods of key-bound ID Tokens depend on use cases.
-In real-time communication systems (e.g., video conferencing), ID Tokens can be extremely short-lived (< 1 minute) because they are only needed to initially authenticate the P2P channel.
-NOTE: time drifts between P2P clients may occur!
-In near-real-time communication systems (e.g., instant messaging with matrix), short validity periods (< 10 minutes) are sufficient because identity verification processes can be repeated if the RP consuming instance is offline, and ID Tokens must be valid when the RP consuming instance receives the token.
-In asynchronous communication systems (e.g., email), longer validity periods are preferable (> 1 day) because ID Tokens must be valid on the first message (email) lookup.
-
-**4. Ephemeral Keys**
-In cryptography, one key (OIDC key pair) should have exactly one purpose (one authenticated channel).
-Therefore, ephemeral one-time-use OIDC key pairs are preferred, i.e., the RP authenticating component should not request a second ID Token for the same OIDC key pair.
-
-**5. Group Communication**
-When the RP authenticating instance is authenticated as the End User in group communication (e.g., video conferences or group chats with more than 2 participants), using a single key-bound ID Token is preferred over multiple individual key-bound ID Tokens.
-This improves performance because the RP authenticating instance must create 1 instead of n (= number of participants) ephemeral key pairs, and the OP must issue 1 instead of n ID Tokens.
-
-**6. Multiple individual ID Tokens per Session**
-Requirement 1 and 4 follows that an RP authenticating instance may require multiple individual ID Tokens per session.
-*Example 1*: Alice's RP authenticates in direct Matrix chats with Bob and Charly. This requires two individual OIDC key pairs and results in two individual key-bound ID Tokens.
-*Example 2*: Alice wants to be authenticated to Bob with her name and her email address. To Charly, Alice only wants to share her name. This requires Alice's RP to request key-bound ID Tokens with two distinct scopes, resulting in two different sets of identity claims.
+An ID Token bound to a key pair for which the OP has verified Alice's possession of the corresponding private key enables Alice to sign her message to Bob using that key.
+This securely authenticates Alice to Bob and allows Bob to detect messages that were not sent by Alice.
+Similar applications for secure email communication, Matrix-based instant messaging, and WebRTC-based video conferences have been discussed in the OIDC² proposal [@!OIDC2].
 
 # Appendix B. Acknowledgements
 
