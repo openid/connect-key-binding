@@ -73,7 +73,7 @@ This specification defines how to bind a public key to an OpenID Connect ID Toke
 
 # Introduction
 
-OpenID Connect (OIDC) enables a Relying Party (RP) to obtain End User (EU) authentication and identity claims from an OpenID Provider (OP) in the form of an ID Token.
+OpenID Connect (OIDC) enables a Relying Party (RP) to obtain End User authentication and identity claims from an OpenID Provider (OP) in the form of an ID Token.
 When authenticating with OIDC, an RP initiates the protocol by sending an authentication request to the OP that contains a nonce.
 In response, the OP authenticates the End User's identity and sends the RP an ID Token, signed by the OP, containing claims about the user and the requested nonce.
 
