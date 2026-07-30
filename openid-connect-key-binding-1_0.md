@@ -104,7 +104,7 @@ This specification uses the following terms:
 
 - **End-User**: The End-User as defined in [@!OpenID.Core].
 
-The parameters **dpop_jkt** and **DPoP** as defined in [@!RFC9449]
+The parameters **dpop_jkt** and **DPoP** as defined in [@!RFC9449].
 
 ## OpenID Connect Metadata
 
@@ -116,7 +116,7 @@ The OP's OpenID Connect Metadata Document [@!OpenID.Discovery] SHOULD include:
 ## Protocol Profile Overview
 
 This specification works by adding parameters and headers to the Authentication Request and Token Request and then validating these fields such that the ID Token returned in the Token Response contains a `cnf` claim for a public key.
-The RP signals to the OP it is requesting a key-bound ID Token by including the scope `bound_key` in the Authentication Request.
+The RP signals to the OP that it is requesting a key-bound ID Token by including the scope `bound_key` in the Authentication Request.
 
 This specification extends OpenID Connect with the addition of a parameter, `dpop_jkt`, to the Authentication Request, and the addition of a `DPoP` header to the Token Request and Refresh Request.
 If the OP chooses to issue a key-bound ID Token it validates the `dpop_jkt` parameter and `DPoP` header and returns an ID Token in the Token Response which includes a `cnf` claim for the public key.
@@ -178,7 +178,7 @@ The Device Authorization Flow follows the pattern of the Authorization Code Flow
 
 ## Authentication Request
 
-If the RP authenticating component is running on a device that supports a web browser, it makes an authorization request per [@!OpenID.Core] 3.1. In addition to the `scope` parameter containing `openid`, and the `response_type` having the value `code`, the `scope` parameter MUST also include `bound_key`, and the request MUST include the `dpop_jkt` parameter having the value of the JWK Thumbprint [@!RFC7638] of the proof-of-possession public key using the SHA-256 hash function, as defined in [@!RFC9449] section 10.
+If the RP authenticating component is running on a device that supports a web browser, it makes an authentication request per Section 3.1 of [@!OpenID.Core]. In addition to the `scope` parameter containing `openid`, and the `response_type` having the value `code`, the `scope` parameter MUST also include `bound_key`, and the request MUST include the `dpop_jkt` parameter having the value of the JWK Thumbprint [@!RFC7638] of the proof-of-possession public key using the SHA-256 hash function, as defined in [@!RFC9449] section 10.
 
 Following is a non-normative example of an authentication request using the authorization code flow:
 
@@ -255,7 +255,7 @@ The OP MUST:
 
 ## Authentication Request
 
-If the RP authenticating component is running on a device that does not support a web browser, it makes an authorization request per [@!RFC8628] 3.1. In the request, the `scope` parameter MUST contain both `openid` and `bound_key`. The request MUST include the `dpop_jkt` parameter having the value of the JWK Thumbprint [@!RFC7638] of the proof-of-possession public key using the SHA-256 hash function, as defined in [@!RFC9449] section 10.
+If the RP authenticating component is running on a device that does not support a web browser, it makes an authorization request per Section 3.1 of [@!RFC8628]. In the request, the `scope` parameter MUST contain both `openid` and `bound_key`. The request MUST include the `dpop_jkt` parameter having the value of the JWK Thumbprint [@!RFC7638] of the proof-of-possession public key using the SHA-256 hash function, as defined in [@!RFC9449] section 10.
 
 Following is a non-normative example of an authentication request using the device authorization flow:
 
@@ -390,7 +390,7 @@ grant_type=refresh_token&refresh_token=8xLOxBtZp8
 
 The OP MUST validate the Refresh Token and MUST validate the `DPoP` header presented.
 The OP MUST reject the `DPoP` header if it is not signed with the public key that was bound to the presented Refresh Token in the initial Token Request.
-Unlike the Token Request, no `c_s256` claim is required in the `DPoP`header for the Refresh Request.
+Unlike the Token Request, no `c_s256` claim is required in the `DPoP` header for the Refresh Request.
 
 If an ID Token is returned as a result of a Refresh Request, an additional requirement applies:
 
