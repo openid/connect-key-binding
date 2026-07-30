@@ -24,11 +24,11 @@
     Jinja2 3.1.6
     lxml 6.1.1
     natsort 8.4.0
-    platformdirs 4.10.0
+    platformdirs 4.11.0
     pycountry 26.2.16
     PyYAML 6.0.3
     requests 2.34.2
-    wcwidth 0.8.1
+    wcwidth 0.8.2
 -->
 <link href="openid-connect-key-binding-1_0.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
@@ -1219,7 +1219,7 @@ li > p:last-of-type:only-child {
 <thead><tr>
 <td class="left"></td>
 <td class="center">openid-connect-key-binding</td>
-<td class="right">June 2026</td>
+<td class="right">July 2026</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Hardt &amp; Heilman</td>
@@ -1234,7 +1234,7 @@ li > p:last-of-type:only-child {
 <dd class="workgroup">OpenID Connect</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-06-24" class="published">24 June 2026</time>
+<time datetime="2026-07-30" class="published">30 July 2026</time>
     </dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
@@ -1440,7 +1440,7 @@ the use of <em>this fixed-width font</em>.<a href="#section-1.1-2" class="pilcro
             <p id="section-1.2-2.3.1"><strong>End-User</strong>: The End-User as defined in <span>[<a href="#OpenID.Core" class="cite xref">OpenID.Core</a>]</span>.<a href="#section-1.2-2.3.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-1.2-3">The parameters <strong>dpop_jkt</strong> and <strong>DPoP</strong> as defined in <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span><a href="#section-1.2-3" class="pilcrow">¶</a></p>
+<p id="section-1.2-3">The parameters <strong>dpop_jkt</strong> and <strong>DPoP</strong> as defined in <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>.<a href="#section-1.2-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="openid-connect-metadata">
@@ -1465,7 +1465,7 @@ the use of <em>this fixed-width font</em>.<a href="#section-1.1-2" class="pilcro
 <a href="#section-1.4" class="section-number selfRef">1.4. </a><a href="#name-protocol-profile-overview" class="section-name selfRef">Protocol Profile Overview</a>
         </h3>
 <p id="section-1.4-1">This specification works by adding parameters and headers to the Authentication Request and Token Request and then validating these fields such that the ID Token returned in the Token Response contains a <code>cnf</code> claim for a public key.
-The RP signals to the OP it is requesting a key-bound ID Token by including the scope <code>bound_key</code> in the Authentication Request.<a href="#section-1.4-1" class="pilcrow">¶</a></p>
+The RP signals to the OP that it is requesting a key-bound ID Token by including the scope <code>bound_key</code> in the Authentication Request.<a href="#section-1.4-1" class="pilcrow">¶</a></p>
 <p id="section-1.4-2">This specification extends OpenID Connect with the addition of a parameter, <code>dpop_jkt</code>, to the Authentication Request, and the addition of a <code>DPoP</code> header to the Token Request and Refresh Request.
 If the OP chooses to issue a key-bound ID Token it validates the <code>dpop_jkt</code> parameter and <code>DPoP</code> header and returns an ID Token in the Token Response which includes a <code>cnf</code> claim for the public key.
 This specification does not add new messages, requests or responses.
@@ -1551,7 +1551,7 @@ It preserves the current OpenID Connect flows and interactions.<a href="#section
         <h3 id="name-authentication-request">
 <a href="#section-2.1" class="section-number selfRef">2.1. </a><a href="#name-authentication-request" class="section-name selfRef">Authentication Request</a>
         </h3>
-<p id="section-2.1-1">If the RP authenticating component is running on a device that supports a web browser, it makes an authorization request per <span>[<a href="#OpenID.Core" class="cite xref">OpenID.Core</a>]</span> 3.1. In addition to the <code>scope</code> parameter containing <code>openid</code>, and the <code>response_type</code> having the value <code>code</code>, the <code>scope</code> parameter MUST also include <code>bound_key</code>, and the request MUST include the <code>dpop_jkt</code> parameter having the value of the JWK Thumbprint <span>[<a href="#RFC7638" class="cite xref">RFC7638</a>]</span> of the proof-of-possession public key using the SHA-256 hash function, as defined in <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span> section 10.<a href="#section-2.1-1" class="pilcrow">¶</a></p>
+<p id="section-2.1-1">If the RP authenticating component is running on a device that supports a web browser, it makes an authentication request per Section 3.1 of <span>[<a href="#OpenID.Core" class="cite xref">OpenID.Core</a>]</span>. In addition to the <code>scope</code> parameter containing <code>openid</code>, and the <code>response_type</code> having the value <code>code</code>, the <code>scope</code> parameter MUST also include <code>bound_key</code>, and the request MUST include the <code>dpop_jkt</code> parameter having the value of the JWK Thumbprint <span>[<a href="#RFC7638" class="cite xref">RFC7638</a>]</span> of the proof-of-possession public key using the SHA-256 hash function, as defined in <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span> section 10.<a href="#section-2.1-1" class="pilcrow">¶</a></p>
 <p id="section-2.1-2">Following is a non-normative example of an authentication request using the authorization code flow:<a href="#section-2.1-2" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-2.1-3">
 <pre>GET /authorize?
@@ -1652,7 +1652,7 @@ grant_type=authorization_code&amp;code=SplxlOBeZQQYbYS6WxSbIA
         <h3 id="name-authentication-request-2">
 <a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-authentication-request-2" class="section-name selfRef">Authentication Request</a>
         </h3>
-<p id="section-3.1-1">If the RP authenticating component is running on a device that does not support a web browser, it makes an authorization request per <span>[<a href="#RFC8628" class="cite xref">RFC8628</a>]</span> 3.1. In the request, the <code>scope</code> parameter MUST contain both <code>openid</code> and <code>bound_key</code>. The request MUST include the <code>dpop_jkt</code> parameter having the value of the JWK Thumbprint <span>[<a href="#RFC7638" class="cite xref">RFC7638</a>]</span> of the proof-of-possession public key using the SHA-256 hash function, as defined in <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span> section 10.<a href="#section-3.1-1" class="pilcrow">¶</a></p>
+<p id="section-3.1-1">If the RP authenticating component is running on a device that does not support a web browser, it makes an authorization request per Section 3.1 of <span>[<a href="#RFC8628" class="cite xref">RFC8628</a>]</span>. In the request, the <code>scope</code> parameter MUST contain both <code>openid</code> and <code>bound_key</code>. The request MUST include the <code>dpop_jkt</code> parameter having the value of the JWK Thumbprint <span>[<a href="#RFC7638" class="cite xref">RFC7638</a>]</span> of the proof-of-possession public key using the SHA-256 hash function, as defined in <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span> section 10.<a href="#section-3.1-1" class="pilcrow">¶</a></p>
 <p id="section-3.1-2">Following is a non-normative example of an authentication request using the device authorization flow:<a href="#section-3.1-2" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-3.1-3">
 <pre>POST /device_authorization HTTP/1.1
@@ -1813,7 +1813,7 @@ grant_type=refresh_token&amp;refresh_token=8xLOxBtZp8
 </div>
 <p id="section-5-6">The OP MUST validate the Refresh Token and MUST validate the <code>DPoP</code> header presented.
 The OP MUST reject the <code>DPoP</code> header if it is not signed with the public key that was bound to the presented Refresh Token in the initial Token Request.
-Unlike the Token Request, no <code>c_s256</code> claim is required in the <code>DPoP</code>header for the Refresh Request.<a href="#section-5-6" class="pilcrow">¶</a></p>
+Unlike the Token Request, no <code>c_s256</code> claim is required in the <code>DPoP</code> header for the Refresh Request.<a href="#section-5-6" class="pilcrow">¶</a></p>
 <p id="section-5-7">If an ID Token is returned as a result of a Refresh Request, an additional requirement applies:<a href="#section-5-7" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-5-8.1">
