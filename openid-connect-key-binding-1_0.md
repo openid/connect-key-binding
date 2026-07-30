@@ -255,7 +255,7 @@ The OP MUST:
 
 ## Authentication Request
 
-If the RP authenticating component is running on a device that does not support a web browser, it makes an authentication request per Section 3.1 of [@!RFC8628]. In the request, the `scope` parameter MUST contain both `openid` and `bound_key`. The request MUST include the `dpop_jkt` parameter having the value of the JWK Thumbprint [@!RFC7638] of the proof-of-possession public key using the SHA-256 hash function, as defined in [@!RFC9449] section 10.
+If the RP authenticating component is running on a device that does not support a web browser, it makes an authorization request per Section 3.1 of [@!RFC8628]. In the request, the `scope` parameter MUST contain both `openid` and `bound_key`. The request MUST include the `dpop_jkt` parameter having the value of the JWK Thumbprint [@!RFC7638] of the proof-of-possession public key using the SHA-256 hash function, as defined in [@!RFC9449] section 10.
 
 Following is a non-normative example of an authentication request using the device authorization flow:
 
