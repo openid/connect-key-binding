@@ -406,6 +406,10 @@ The mechanism for how an RP authenticating component proves to an RP consuming c
 
 An RP authenticating component SHOULD only share an ID Token with a consuming component when such sharing is consistent with the original purpose for which the identity data was collected and the scope of consent obtained from the End-User.
 
+## ID Token claims
+
+This spec defines a mechanism by which the Authorization Server (AS) can issue and id_token that is bound to the client specified key. This implies that the client may share this id_token with other applications and services within the first party organization. The AS MUST take care to ensure that any claims added to the id_token are appropriate for the entire organization as the AS does not know to which applications or services the id_token may be shared.
+
 # Security Considerations
 
 ## Public Key Substitution Attacks
@@ -433,12 +437,6 @@ To prevent token confusion attacks, the RP authenticating component SHOULD bind 
 ## Using cnf as a User Claim
 
 The `cnf` claim in the ID Token MUST be verified together with a proof of possession and MUST NOT be treated as proof on its own. A proof of possession is REQUIRED to establish that a party controls the key identified by `cnf`. The `cnf` claim SHOULD only be used to bind a signed object with the other claims in the ID Token.
-
-# Privacy Considerations
-
-## ID Token claims
-
-This spec defines a mechanism by which the Authorization Server (AS) can issue and id_token that is bound to the client specified key. This implies that the client may share this id_token with other applications and services within the first party organization. The AS MUST take care to ensure that any claims added to the id_token are appropriate for the entire organization as the AS does not know to which applications or services the id_token may be shared.
 
 # IANA Considerations
 
