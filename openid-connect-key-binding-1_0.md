@@ -182,7 +182,7 @@ The Device Authorization Flow follows the pattern of the Authorization Code Flow
 +----------+                                +------+
 ```
 
-This specification defines key binding for the Authorization Code Flow and the Device Authorization Flow only. The Implicit Flow [@!OpenID.Core] MUST NOT be used to obtain a key-bound ID Token. The Implicit Flow returns the ID Token from the Authorization Endpoint without a Token Request, so the RP Authenticating Component has no opportunity to demonstrate possession of the key identified by `dpop_jkt`, and the OP cannot bind the ID Token to a key it has no proof the requester controls. Support for other flows is out of scope of this specification.
+This specification defines key binding for the Authorization Code Flow and the Device Authorization Flow only. The Implicit Flow [@!OpenID.Core] MUST NOT be used to obtain a key-bound ID Token. The Implicit Flow returns the ID Token from the Authorization Endpoint without a Token Request, so the RP Authenticating Component has no opportunity to demonstrate possession of the key identified by `dpop_jkt`, and the OP cannot bind the ID Token to a key it has no proof the requester controls. The Hybrid Flow [@!OpenID.Core] MUST NOT be used to obtain a key-bound ID Token. While the Authorization Code returned by the Hybrid Flow permits an ID Token to be obtained from the Token Endpoint, an ID Token returned from the Authorization Endpoint in the same response cannot be key-bound, and this specification does not define how an RP Authenticating Component distinguishes the two. Support for other flows is out of scope of this specification.
 
 # Authorization Code Flow
 
