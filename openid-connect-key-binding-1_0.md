@@ -558,7 +558,7 @@ specification.
 
    * Added to Privacy Considerations that an RP Authenticating Component MUST NOT share an ID Token containing claims an RP Consuming Component should not have access to, and the reason a key-bound ID Token must not be presented outside the RP Trust Boundary.
 
-   * Stated that the Implicit Flow MUST NOT be used to obtain a key-bound ID Token, and that other flows are out of scope.
+   * Stated that the Implicit and Hybrid Flows MUST NOT be used to obtain a key-bound ID Token, and that other flows are out of scope.
 
    * Capitalized RP Authenticating Component and RP Consuming Component throughout as defined terms.
 
