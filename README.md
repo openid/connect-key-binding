@@ -13,6 +13,8 @@ This document is currently being worked on by the OpenID Foundation AB/Connect W
 
 ## Builds
 
+The latest published specification is at https://openid.net/specs/openid-connect-key-binding-1_0.html.
+
 You can view the latest editors' draft at [https://openid.github.io/connect-key-binding/main.html](https://openid.github.io/connect-key-binding/main.html).
 
 Previews for each branch of this project are automatically built and published at the URL https://openid.github.io/connect-key-binding/$branchname.html.
