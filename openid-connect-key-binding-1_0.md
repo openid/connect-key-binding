@@ -124,7 +124,7 @@ The OP's OpenID Connect Metadata Document [@!OpenID.Discovery] SHOULD include:
 ## Protocol Profile Overview
 
 This specification works by adding parameters and headers to the Authentication Request and Token Request and then validating these fields such that the ID Token returned in the Token Response contains a `cnf` claim for a public key.
-The RP signals to the OP it is requesting a key-bound ID Token by including the scope `bound_key` in the Authentication Request.
+The RP signals to the OP that it is requesting a key-bound ID Token by including the scope `bound_key` in the Authentication Request.
 
 This specification extends OpenID Connect with the addition of a parameter, `dpop_jkt`, to the Authentication Request, and the addition of a `DPoP` header to the Token Request and Refresh Request.
 If the OP chooses to issue a key-bound ID Token it validates the `dpop_jkt` parameter and `DPoP` header and returns an ID Token in the Token Response which includes a `cnf` claim for the public key.
@@ -400,7 +400,7 @@ grant_type=refresh_token&refresh_token=8xLOxBtZp8
 
 The OP MUST validate the Refresh Token and MUST validate the `DPoP` header presented.
 The OP MUST reject the `DPoP` header if it is not signed with the public key that was bound to the presented Refresh Token in the initial Token Request.
-Unlike the Token Request, no `c_s256` claim is required in the `DPoP`header for the Refresh Request.
+Unlike the Token Request, no `c_s256` claim is required in the `DPoP` header for the Refresh Request.
 
 If an ID Token is returned as a result of a Refresh Request, an additional requirement applies:
 
